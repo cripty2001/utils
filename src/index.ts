@@ -123,10 +123,11 @@ export function parseQuery(query: string | Record<string, any> | URLSearchParams
     // Extracting fields
     const toReturn: URLSearchParams = new URLSearchParams();
     for (const field of fields) {
-        if (data.has(field)) {
-            toReturn.set(field, data.get(field) as string);
-            data.delete(field);
-        }
+        if (!data.has(field))
+            throw new Error(`Missing field ${field}`);
+
+        toReturn.set(field, data.get(field) as string);
+        data.delete(field);
     }
 
     // Returning extracted fields
