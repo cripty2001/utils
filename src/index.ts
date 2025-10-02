@@ -1,6 +1,6 @@
 import { isEqualWith } from "lodash";
 
-export type JSONEncodable = number | string | boolean | JSONEncodable[] | { [key: string]: JSONEncodable };
+export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
 
 export type TypeofArray<T extends any[]> = T extends (infer U)[] ? U : never;
 export type TypeofRecord<T extends Record<string, any>> = T extends Record<
