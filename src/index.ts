@@ -102,3 +102,36 @@ export function copyToClipboard(text: string): void {
 export function stableLog(obj: any, message: string = ''): void {
     console.log(message, JSON.parse(JSON.stringify(obj)));
 }
+
+export function parseQuery(query: string | Record<string, any> | URLSearchParams, fields: string[]): { extracted: URLSearchParams, left: URLSearchParams } {
+    const data = (() => {
+        if (typeof query === 'string') {
+            return new URLSearchParams(query);
+        }
+        else if (query instanceof URLSearchParams) {
+            return query;
+        }
+        else {
+            const toReturn = new URLSearchParams();
+            for (const k in query) {
+                toReturn.set(k, query[k]);
+            }
+            return toReturn;
+        }
+    })();
+
+    // Extracting fields
+    const toReturn: URLSearchParams = new URLSearchParams();
+    for (const field of fields) {
+        if (data.has(field)) {
+            toReturn.set(field, data.get(field) as string);
+            data.delete(field);
+        }
+    }
+
+    // Returning extracted fields
+    return {
+        extracted: toReturn,
+        left: data
+    };
+}
