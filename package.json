@@ -1,6 +1,6 @@
 {
   "name": "@cripty2001/utils",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "Internal Set of utils. If you need them use them, otherwise go to the next package ;)",
   "homepage": "https://github.com/cripty2001/utils#readme",
   "bugs": {
@@ -51,6 +51,10 @@
     "./react-whispr": {
       "import": "./dist/react-whispr.js",
       "types": "./dist/react-whispr.d.ts"
+    },
+    "./logger": {
+      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
     }
   }
 }
