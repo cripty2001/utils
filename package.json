@@ -1,6 +1,6 @@
 {
   "name": "@cripty2001/utils",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Internal Set of utils. If you need them use them, otherwise go to the next package ;)",
   "homepage": "https://github.com/cripty2001/utils#readme",
   "bugs": {
@@ -19,8 +19,8 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "@types/react": "^19.2.0",
-    "react": "^19.2.0",
+    "@types/react": "^19.1.8",
+    "react": "^19.1.8",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -29,7 +29,7 @@
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
-    "react": "^19.2.0"
+    "react": "^19.1.8"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -39,15 +39,15 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "types": "./dist/index.d.ts"
     },
     "./dispatcher": {
       "import": "./dist/Dispatcher.js",
-      "require": "./dist/Dispatcher.js"
+      "types": "./dist/Dispatcher.d.ts"
     },
     "./react-whispr": {
       "import": "./dist/react-whispr.js",
-      "require": "./dist/react-whispr.js"
+      "types": "./dist/react-whispr.d.ts"
     }
   }
 }
