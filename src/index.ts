@@ -1,3 +1,5 @@
+import { isEqualWith } from "lodash";
+
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | { [key: string]: JSONEncodable };
 
 export type TypeofArray<T extends any[]> = T extends (infer U)[] ? U : never;
@@ -71,3 +73,32 @@ export async function loop(cb: () => Promise<void>, interval: number, onError: (
     }
 }
 
+
+/**
+ * Float aware deep equality check between two values.
+ */
+export function isEqual(a: any, b: any): boolean {
+    const TOLERANCE = 1e-9;
+
+    const toReturn = isEqualWith(a, b, (a, b) => {
+        if (typeof a === 'number' && typeof b === 'number')
+            return Math.abs(a - b) < TOLERANCE;
+
+        return undefined;
+    });
+    return toReturn;
+}
+export function arrayStep(from: number, to: number, step: number): number[] {
+    const result: number[] = [];
+    for (let i = from; i <= to; i += step) {
+        result.push(i);
+    }
+    return result;
+}
+export function copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text)
+}
+
+export function stableLog(obj: any, message: string = ''): void {
+    console.log(message, JSON.parse(JSON.stringify(obj)));
+}

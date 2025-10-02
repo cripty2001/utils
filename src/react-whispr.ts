@@ -67,3 +67,30 @@ export function useWhispr<T>(data: T | Whispr<T>): Whispr<T> {
     return w;
 }
 
+
+
+export function useCurrentTimestamp(): number {
+    const [currTs, setCurrTs] = useState(Date.now());
+    useEffect(() => {
+        const id = setInterval(() =>
+            setCurrTs(Date.now()),
+            1000
+        );
+        return () => clearInterval(id);
+    }, [setCurrTs]);
+    return currTs;
+}
+export function useDebounced<T>(value: T): T {
+    const lastEmitted = useRef(value);
+    const [debounced, setDebounced] = useState(value);
+
+    useEffect(() => {
+        if (isEqual(lastEmitted.current, value))
+            return;
+
+        lastEmitted.current = value;
+        setDebounced(value);
+    }, [value]);
+
+    return debounced;
+}
