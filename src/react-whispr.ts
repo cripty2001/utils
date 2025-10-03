@@ -2,6 +2,7 @@ import { Whispr, type WhisprSetter } from "@cripty2001/whispr";
 import { useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
+import { Dispatcher } from "./Dispatcher";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -93,4 +94,37 @@ export function useDebounced<T>(value: T): T {
     }, [value]);
 
     return debounced;
+}
+
+
+/**
+ * 
+ * Wraps an async function into a reactable data.
+ * 
+ * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive
+ * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem.
+ * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed
+ * @returns  The dispatcher
+ * 
+ * @type I Input for the async function.
+ * @type O Output for the async function
+ */
+export function useAsync<I, O>(
+    f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
+    data: I,
+    debouce: number = 200
+): Dispatcher<I, O> {
+    // Initing reactive input
+    const [input, setInput] = Whispr.create(data);
+    useEffect(() => {
+        setInput(data);
+    }, [data, setInput]);
+
+    // Initing dispatcher
+    const dispatcher: Dispatcher<I, O> = useRef(
+        new Dispatcher<I, O>(input, f, debouce)
+    ).current;
+
+    // Returning dispatcher
+    return dispatcher
 }
