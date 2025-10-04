@@ -10,6 +10,10 @@ export type TypeofRecord<T extends Record<string, any>> = T extends Record<
     ? U
     : never;
 
+type AtLeastOne<T> = {
+    [K in keyof T]: Pick<T, K> & Partial<Omit<T, K>>
+}[keyof T];
+
 export function getRandom(_alphabeth: string, length: number): string {
     const alphabeth = _alphabeth.split("");
     const toReturn: string[] = [];
