@@ -16,6 +16,9 @@ export type AtLeastOne<T> = {
 export type ExactlyOne<T> = {
     [K in keyof T]: Pick<T, K> & Partial<Record<Exclude<keyof T, K>, never>>
 }[keyof T];
+export type AllRequired<T> = T extends ExactlyOne<infer U>
+    ? ExactlyOne<Required<U>>
+    : never;
 
 export function getRandom(_alphabeth: string, length: number): string {
     const alphabeth = _alphabeth.split("");

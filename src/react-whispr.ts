@@ -117,8 +117,10 @@ export function useAsync<I, O>(
     // Initing reactive input
     const [input, setInput] = Whispr.create(data);
     useEffect(() => {
+        if (isEqual(data, input.value))
+            return;
         setInput(data);
-    }, [data, setInput]);
+    }, [data, input, setInput]);
 
     // Initing dispatcher
     const dispatcher: Dispatcher<I, O> = useRef(
