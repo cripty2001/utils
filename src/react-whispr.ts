@@ -115,10 +115,10 @@ export function useAsync<I, O>(
     debouce: number = 200
 ): Dispatcher<I, O> {
     // Initing reactive input
-    const [input, setInput] = Whispr.create(data);
+    const [input, setInput] = useRef(Whispr.create(data)).current;
     useEffect(() => {
         setInput(data); // Debouncing already handled by dispatcher
-    }, [data, input, setInput]);
+    }, [data, setInput]);
 
     // Initing dispatcher
     const dispatcher: Dispatcher<I, O> = useRef(
