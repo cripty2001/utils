@@ -145,3 +145,7 @@ export function parseQuery(query: string | Record<string, any> | URLSearchParams
         left: data
     };
 }
+
+export function randBetween(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
