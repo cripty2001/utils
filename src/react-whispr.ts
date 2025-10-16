@@ -70,17 +70,18 @@ export function useWhispr<T>(data: T | Whispr<T>): Whispr<T> {
 
 
 
-export function useCurrentTimestamp(): number {
+export function useCurrentTimestamp(refresh: number = 1000): number {
     const [currTs, setCurrTs] = useState(Date.now());
     useEffect(() => {
         const id = setInterval(() =>
             setCurrTs(Date.now()),
-            1000
+            refresh
         );
         return () => clearInterval(id);
     }, [setCurrTs]);
     return currTs;
 }
+
 export function useDebounced<T>(value: T): T {
     const lastEmitted = useRef(value);
     const [debounced, setDebounced] = useState(value);
