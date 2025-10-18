@@ -108,6 +108,17 @@ export function arrayStep(from: number, to: number, step: number): number[] {
 export function copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text)
 }
+export function download(data: string | Blob, filename: string, mimeType: string = 'application/octet-stream'): void {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
 export function stableLog(obj: any, message: string = ''): void {
     console.log(message, JSON.parse(JSON.stringify(obj)));
