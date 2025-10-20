@@ -68,7 +68,17 @@ export function useWhispr<T>(data: T | Whispr<T>): Whispr<T> {
     return w;
 }
 
-
+/**
+ * Subscribe a callback to a Whispr inside a react component, properly handling unsubscription on unmount.
+ * @param w The whispr to subscribe to
+ * @param cb The callback to call on value change
+ */
+export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void): void {
+    useEffect(() => {
+        const unsub = w.subscribe(cb);
+        return () => unsub();
+    }, [w, cb]);
+}
 
 export function useCurrentTimestamp(refresh: number = 1000): number {
     const [currTs, setCurrTs] = useState(Date.now());
