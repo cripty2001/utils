@@ -160,3 +160,14 @@ export function parseQuery(query: string | Record<string, any> | URLSearchParams
 export function randBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+import "dotenv/config";
+
+export function getEnv(key: string, defaultValue: string | undefined): string {
+    const value = process.env[key] ?? defaultValue;
+
+    if (value === undefined)
+        throw new Error(`Environment variable ${key} is not defined and no default value was provided.`);
+
+    return value;
+}
