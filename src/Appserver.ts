@@ -7,6 +7,8 @@ export type AppserverHandler<
     O extends JSONEncodable,
 > = (input: I, user: U | null) => Promise<O> | O;
 
+export type AppserverUsergetter<U extends JSONEncodable> = (token: string) => Promise<U | null>;
+
 class AppserverError extends Error {
     constructor(public code: string, message: string, public status = 500) {
         super(message);
@@ -22,9 +24,9 @@ export class AppserverHandledError extends AppserverError {
 
 export class Appserver<U extends JSONEncodable> {
     private app: express.Express;
-    private parseUser: (token: string) => Promise<U | null>;
+    private parseUser: AppserverUsergetter<U>;
 
-    constructor(port: number, parseUser: Appserver<U>['parseUser']) {
+    constructor(port: number, parseUser: AppserverUsergetter<U>) {
         this.parseUser = parseUser;
 
         this.app = express();
