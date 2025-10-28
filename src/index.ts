@@ -161,8 +161,6 @@ export function randBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-import "dotenv/config";
-
 export function getEnv(key: string, defaultValue?: string): string {
     const value = process.env[key] ?? defaultValue;
 
