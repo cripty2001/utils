@@ -1,5 +1,7 @@
 import express, { type Express } from 'express';
 import { JSONEncodable } from '.';
+import { Static, TSchema } from '@sinclair/typebox';
+import { Value } from '@sinclair/typebox/value';
 
 export type AppserverHandler<
     I extends JSONEncodable,
@@ -10,17 +12,16 @@ export type AppserverHandler<
 export type AppserverUsergetter<U extends JSONEncodable> = (token: string) => Promise<U | null>;
 
 class AppserverError extends Error {
-    constructor(public code: string, message: string, public status = 500) {
+    constructor(public code: string, message: string, payload: JSONEncodable = {}, public status = 500) {
         super(message);
     }
 }
 
 export class AppserverHandledError extends AppserverError {
-    constructor(code: string, message: string) {
-        super(code, message);
+    constructor(code: string, message: string, payload: JSONEncodable = {}) {
+        super(code, message, payload);
     }
 }
-
 
 export class Appserver<U extends JSONEncodable> {
     private app: express.Express;
@@ -54,10 +55,25 @@ export class Appserver<U extends JSONEncodable> {
         };
     }
 
-    public register<I extends JSONEncodable, O extends JSONEncodable>(action: string, handler: AppserverHandler<I, U, O>): void {
+    public register<
+        ISchema extends TSchema,
+        O extends JSONEncodable,
+        I extends Static<ISchema> & JSONEncodable = Static<ISchema> & JSONEncodable,
+    >(
+        action: string,
+        inputSchema: ISchema,
+        handler: AppserverHandler<I, U, O>): void {
         this.app.post(`/exec/${action}`, async (req, res) => {
             try {
-                const { data, user } = await this.parseInput<I>(req);
+                const { data: unsafeData, user } = await this.parseInput<I>(req);
+
+                if (!Value.Check(inputSchema, unsafeData))
+                    return res
+                        .status(422)
+                        .json({
+                            errors: [...Value.Errors(inputSchema, unsafeData)]
+                        });
+                const data = unsafeData as I;
 
                 const output: O = await handler(data, user);
                 return res

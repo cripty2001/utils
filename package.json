@@ -36,7 +36,8 @@
   "peerDependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "react": "^19"
+    "react": "^19",
+    "@sinclair/typebox": "^0.34.41"
   },
   "peerDependenciesMeta": {
     "react": {
