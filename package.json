@@ -34,10 +34,11 @@
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
+    "@sinclair/typebox": "^0.34.41",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "react": "^19",
-    "@sinclair/typebox": "^0.34.41"
+    "@msgpack/msgpack": "^3.1.2"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -61,13 +62,13 @@
       "import": "./dist/Logger.js",
       "types": "./dist/Logger.d.ts"
     },
-    "./appserver": {
-      "import": "./dist/Appserver.js",
-      "types": "./dist/Appserver.d.ts"
-    },
     "./appserver/server": {
-      "import": "./dist/Appserver.js",
-      "types": "./dist/Appserver.d.ts"
+      "import": "./dist/Appserver/server.js",
+      "types": "./dist/Appserver/server.d.ts"
+    },
+    "./appserver/client": {
+      "import": "./dist/Appserver/client.js",
+      "types": "./dist/Appserver/client.d.ts"
     }
   }
 }
