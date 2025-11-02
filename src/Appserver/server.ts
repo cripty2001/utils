@@ -19,6 +19,12 @@ class AppserverError extends Error {
     }
 }
 
+export class AppserverAuthError extends AppserverError {
+    constructor() {
+        super("PERMISSION_DENIED", "You have no right to access this page", {}, 403);
+    }
+}
+
 export class AppserverHandledError extends AppserverError {
     constructor(code: string, message: string, payload: AppserverData = {}) {
         super(code, message, payload);
@@ -64,11 +70,18 @@ export class Appserver<U extends AppserverData> {
     >(
         action: string,
         inputSchema: ISchema,
+        auth: boolean,
         handler: AppserverHandler<I, U, O>): void {
         this.app.post(`/exec/${action}`, async (req, res) => {
             const { status, data } = await (async () => {
                 try {
                     const { data: unsafeData, user } = await this.parseInput<I>(req);
+
+                    if (auth && user === null)
+                        return {
+                            status: 401,
+                            data: { error: 'Authentication required', code: 'AUTHENTICATION_REQUIRED' }
+                        };
 
                     if (!Value.Check(inputSchema, unsafeData))
                         return {
