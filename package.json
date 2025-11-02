@@ -64,6 +64,10 @@
     "./appserver": {
       "import": "./dist/Appserver.js",
       "types": "./dist/Appserver.d.ts"
+    },
+    "./appserver/server": {
+      "import": "./dist/Appserver.js",
+      "types": "./dist/Appserver.d.ts"
     }
   }
 }
