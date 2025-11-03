@@ -1,6 +1,6 @@
 {
   "name": "@cripty2001/utils",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "description": "Internal Set of utils. If you need them use them, otherwise go to the next package ;)",
   "homepage": "https://github.com/cripty2001/utils#readme",
   "bugs": {
@@ -29,7 +29,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@cripty2001/whispr": "^0.1.0",
+    "@cripty2001/whispr": "^0.2.0",
     "@types/lodash": "^4.17.20",
     "lodash": "^4.17.21"
   },
