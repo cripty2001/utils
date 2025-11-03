@@ -1,5 +1,5 @@
 import { Whispr } from "@cripty2001/whispr";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
 import { Dispatcher } from "./Dispatcher";
@@ -147,4 +147,25 @@ export function useAsync<I, O>(
 
     // Returning dispatcher
     return dispatcher
+}
+
+/**
+ * Format a timestamp into a relative time string (e.g. "5 minutes ago", "in 2 hours"), using the browser locale.
+ * The refreshed time is reactive.
+ * @param refresh The refresh interval, in milliseconds. Default to 1000ms.
+ * @returns A callback (reactive, will change on refresh) that formats a given timestamp into a relative time string.
+ */
+export function useRelTime(refresh: number = 1000): (ts: Date | number) => string {
+    const currTs = useCurrentTimestamp(refresh);
+    const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
+
+    const cb = useCallback((ts: Date | number): string => {
+        const now = currTs;
+        const then = ts instanceof Date ? ts.getTime() : ts;
+        const delta = then - now;
+        const seconds = Math.round(delta / 1000);
+        return rtf.format(seconds, "second");
+    }, [currTs, rtf]);
+
+    return cb;
 }
