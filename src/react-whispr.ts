@@ -1,4 +1,4 @@
-import { Whispr, type WhisprMap, type WhisprSetter } from "@cripty2001/whispr";
+import { Whispr } from "@cripty2001/whispr";
 import { useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
