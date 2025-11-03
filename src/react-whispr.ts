@@ -1,4 +1,4 @@
-import { Whispr, type WhisprSetter } from "@cripty2001/whispr";
+import { Whispr, type WhisprMap, type WhisprSetter } from "@cripty2001/whispr";
 import { useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
@@ -80,6 +80,11 @@ export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void): void {
     }, [w, cb]);
 }
 
+/**
+ * Return a reactive current timestamp (ms), updated at the given interval.
+ * @param refresh The refresh interval
+ * @returns The current timestamp
+ */
 export function useCurrentTimestamp(refresh: number = 1000): number {
     const [currTs, setCurrTs] = useState(Date.now());
     useEffect(() => {
@@ -92,6 +97,11 @@ export function useCurrentTimestamp(refresh: number = 1000): number {
     return currTs;
 }
 
+/**
+ * Debounce a reactive value, deep checking for equality, and stopping updates until the value changes.
+ * @param value The value to debounce
+ * @returns The debounced value
+ */
 export function useDebounced<T>(value: T): T {
     const lastEmitted = useRef(value);
     const [debounced, setDebounced] = useState(value);
@@ -106,7 +116,6 @@ export function useDebounced<T>(value: T): T {
 
     return debounced;
 }
-
 
 /**
  * 
