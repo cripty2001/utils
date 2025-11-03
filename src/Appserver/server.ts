@@ -1,7 +1,7 @@
 import express, { type Express } from 'express';
 import { Static, TSchema } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
-import { encode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
 import { AppserverData } from './common';
 
 encode({}); // Fixes issue with msgpack not being included in build
@@ -48,9 +48,9 @@ export class Appserver<U extends AppserverData> {
 
         const data = (() => {
             try {
-                return JSON.parse(req.body);
+                return decode(req.body);
             } catch {
-                throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid JSON', 400);
+                throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', 400);
             }
         })() as T;
 
