@@ -60,8 +60,12 @@
       "types": "./dist/react-whispr.d.ts"
     },
     "./logger": {
-      "import": "./dist/Logger.js",
-      "types": "./dist/Logger.d.ts"
+      "import": "./dist/Logger/Logger.js",
+      "types": "./dist/Logger/Logger.d.ts"
+    },
+    "./logger/react": {
+      "import": "./dist/Logger/react-display.js",
+      "types": "./dist/Logger/react-display.d.ts"
     },
     "./appserver/server": {
       "import": "./dist/Appserver/server.js",
