@@ -34,11 +34,12 @@
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
+    "lucide-react": "^0.552.0",
+    "@msgpack/msgpack": "^3.1.2",
     "@sinclair/typebox": "^0.34.41",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "react": "^19",
-    "@msgpack/msgpack": "^3.1.2"
+    "react": "^19"
   },
   "peerDependenciesMeta": {
     "react": {
