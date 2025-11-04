@@ -26,7 +26,8 @@ export function LoggerReactDisplay() {
         <div className="fixed bottom-0 right-0 w-full z-50  p-4 rounded " >
             <div className="flex flex-col gap-2 items-center w-full justify-center" >
                 {
-                    messages
+                    [...messages]
+                        .reverse()
                         .slice(0, 3)
                         .map((message) => (
                             <div
