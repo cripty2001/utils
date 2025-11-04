@@ -23,6 +23,12 @@ export class ClientValidationError extends ClientError {
 export class Client {
     constructor(private url: string) { }
 
+    private authToken: string | null = null;
+
+    public setAuthToken(token: string | null) {
+        this.authToken = token;
+    }
+
     public async exec<I extends AppserverData, O extends AppserverData>(
         action: string,
         input: I
@@ -31,6 +37,7 @@ export class Client {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
+                ...(this.authToken !== null ? { "Authorization": `Bearer ${this.authToken}` } : {}),
             },
             body: new Blob(
                 [new Uint8Array(
@@ -44,6 +51,10 @@ export class Client {
         let responseData;
 
         switch (res.status) {
+            case 401:
+            case 403:
+                this.authToken = null;
+                throw new ClientError("Permission denied");
             case 200:
                 responseData = decoded as O;
                 return responseData;
