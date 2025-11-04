@@ -87,7 +87,8 @@ export class Appserver<U extends AppserverData> {
                         return {
                             status: 422,
                             data: {
-                                errors: [...Value.Errors(inputSchema, unsafeData)]
+                                errors: [...Value.Errors(inputSchema, unsafeData)],
+                                received: unsafeData
                             }
                         }
 
