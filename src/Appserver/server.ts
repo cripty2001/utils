@@ -104,6 +104,7 @@ export class Appserver<U extends AppserverData> {
                             data: { error: e.message, code: e.code, payload: e.payload }
                         };
 
+                    console.log("Unhandled server error:", e);
                     return {
                         status: 500,
                         data: { error: 'Internal server error', code: 'INTERNAL_SERVERERROR' }
