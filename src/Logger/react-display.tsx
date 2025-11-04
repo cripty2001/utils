@@ -23,8 +23,23 @@ export function LoggerReactDisplay() {
     const relTs = useRelTime();
 
     return (
-        <div className="fixed bottom-0 right-0 w-full z-50  p-4 rounded " >
-            <div className="flex flex-col gap-2 items-center w-full justify-center" >
+        <div style={{
+            position: 'fixed',
+            bottom: 0,
+            right: 0,
+            width: '100%',
+            zIndex: 50,
+            padding: '1rem',
+            borderRadius: '0.5rem',
+        }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+                alignItems: 'center',
+                width: '100%',
+                justifyContent: 'center',
+            }}>
                 {
                     [...messages]
                         .reverse()
@@ -32,26 +47,47 @@ export function LoggerReactDisplay() {
                         .map((message) => (
                             <div
                                 key={message.id}
-                                className={`p-2 rounded shadow-md text-white ng-black w-full max-w-prose cursor-pointer`}
-                                onClick={message.dismiss}
                                 style={{
+                                    padding: '0.5rem',
+                                    borderRadius: '0.375rem',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                    color: '#fff',
+                                    width: '100%',
+                                    maxWidth: '65ch',
+                                    cursor: 'pointer',
                                     backgroundColor: getColor(message.severity)
-                                }
-                                }
+                                }}
+                                onClick={message.dismiss}
                             >
-                                <div className="flex justify-between items-center" >
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}>
                                     <div>
                                         <strong>[{relTs(message.date)}] </strong>
-                                        {message.context && <span className="ml-2" > - {message.context} </span>}
+                                        {message.context && <span style={{
+                                            marginLeft: '0.5rem',
+                                        }}> - {message.context} </span>}
                                     </div>
-                                    < button
+                                    <button
                                         onClick={message.dismiss}
-                                        className="ml-4 text-white font-bold"
+                                        style={{
+                                            marginLeft: '1rem',
+                                            color: '#fff',
+                                            fontWeight: 'bold',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: 0,
+                                        }}
                                     >
                                         <X size={16} />
                                     </button>
                                 </div>
-                                < div className="mt-1" > {message.message} </div>
+                                <div style={{
+                                    marginTop: '0.25rem',
+                                }}>{message.message}</div>
                             </div>
                         ))}
             </div>
