@@ -49,7 +49,8 @@ export class Appserver<U extends AppserverData> {
         const data = (() => {
             try {
                 return decode(req.body);
-            } catch {
+            } catch (e) {
+                console.log(e);
                 throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', 400);
             }
         })() as T;
