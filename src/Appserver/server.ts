@@ -73,7 +73,7 @@ export class Appserver<U extends AppserverData> {
         inputSchema: ISchema,
         auth: boolean,
         handler: AppserverHandler<I, U, O>): void {
-        this.app.post(`/exec/${action}`, async (req, res) => {
+        this.app.post(`/exec/${action}`, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
             const { status, data } = await (async () => {
                 try {
                     const { data: unsafeData, user } = await this.parseInput<I>(req);
