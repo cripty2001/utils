@@ -271,3 +271,10 @@ export function timediff2HumanReadable(diffMs: number): string {
 
     return rtf.format(Math.round(diff), unit as Intl.RelativeTimeFormatUnit);
 }
+
+export function fn2promise<T>(fn: () => T | Promise<T>): Promise<T> {
+    const result = fn();
+    return result instanceof Promise ?
+        result :
+        Promise.resolve(result);
+}
