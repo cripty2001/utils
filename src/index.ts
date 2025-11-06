@@ -1,3 +1,4 @@
+import { Whispr } from "@cripty2001/whispr";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
@@ -229,3 +230,9 @@ export function getEnv(key: string, defaultValue?: string): string {
 
     return value;
 }
+
+const [currentTsMs, setCurrentTsMs] = Whispr.create<number>(Date.now());
+setInterval(() => {
+    setCurrentTsMs(Date.now());
+}, 200);
+export const CURRENT_TS_MS = currentTsMs;

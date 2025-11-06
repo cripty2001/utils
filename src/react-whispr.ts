@@ -1,8 +1,9 @@
 import { Whispr } from "@cripty2001/whispr";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
 import { Dispatcher } from "./Dispatcher";
+import { CURRENT_TS_MS } from ".";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -82,19 +83,10 @@ export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void): void {
 
 /**
  * Return a reactive current timestamp (ms), updated at the given interval.
- * @param refresh The refresh interval
  * @returns The current timestamp
  */
 export function useCurrentTimestamp(refresh: number = 1000): number {
-    const [currTs, setCurrTs] = useState(Date.now());
-    useEffect(() => {
-        const id = setInterval(() =>
-            setCurrTs(Date.now()),
-            refresh
-        );
-        return () => clearInterval(id);
-    }, [setCurrTs]);
-    return currTs;
+    return useWhisprValue(CURRENT_TS_MS);
 }
 
 /**
