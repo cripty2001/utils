@@ -236,3 +236,38 @@ setInterval(() => {
     setCurrentTsMs(Date.now());
 }, 200);
 export const CURRENT_TS_MS = currentTsMs;
+
+
+export function timediff2HumanReadable(diffMs: number): string {
+    const { unit, diff } = (() => {
+        let toReturn = diffMs
+
+        const OPTIONS = [
+            { divisor: 1000, unit: 'milliseconds' },
+            { divisor: 60, unit: 'seconds' },
+            { divisor: 60, unit: 'minutes' },
+            { divisor: 24, unit: 'hours' },
+            { divisor: 30, unit: 'days' },
+            { divisor: 12, unit: 'months' },
+            { divisor: 1, unit: 'years' },
+        ]
+
+        while (OPTIONS.length) {
+            const { divisor, unit } = OPTIONS.shift()!;
+
+            if (Math.abs(toReturn) < divisor)
+                return {
+                    unit,
+                    diff: toReturn
+                };
+
+            toReturn = toReturn / divisor;
+        }
+
+        return { unit: 'years', diff: toReturn };
+    })();
+
+    const rtf = new Intl.RelativeTimeFormat();
+
+    return rtf.format(Math.round(diff), unit as Intl.RelativeTimeFormatUnit);
+}
