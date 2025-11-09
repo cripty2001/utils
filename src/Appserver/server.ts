@@ -34,12 +34,49 @@ export class AppserverHandledError extends AppserverError {
 export class Appserver<U extends AppserverData> {
     private app: express.Express;
     private parseUser: AppserverUsergetter<U>;
+    private getMetrics: () => Record<string, number>;
 
-    constructor(port: number, parseUser: AppserverUsergetter<U>) {
+    constructor(port: number, parseUser: AppserverUsergetter<U>, getMetrics: () => Record<string, number>) {
         this.parseUser = parseUser;
+        this.getMetrics = getMetrics;
 
         this.app = express();
         this.app.listen(port);
+
+        this.app.get('/metrics', async (req, res) => {
+            await this.handleMetricsRequest(req, res);
+        });
+    }
+
+    private async handleMetricsRequest(req: express.Request, res: express.Response): Promise<void> {
+        try {
+            const metrics = this.getMetrics();
+            const toReturn = Object.entries(metrics)
+                .map(([name, value]) => {
+                    if (typeof value !== 'number' || !isFinite(value))
+                        throw new Error(`Metric value for "${name}" is not a number`);
+
+                    const prometheusName = 'app_' + name
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, '_')
+                        .replace(/_+/g, '_')
+                        .replace(/^_+|_+$/g, '');
+
+                    return `# TYPE ${prometheusName} gauge\n${prometheusName} ${value}\n`;
+                })
+                .join('');
+
+            res
+                .status(200)
+                .type('text/plain')
+                .send(toReturn);
+        } catch (e) {
+            console.log("Error generating metrics:", e);
+            res
+                .status(500)
+                .type('text/plain')
+                .send('# Error generating metrics\n');
+        }
     }
 
     private async parseInput<T extends AppserverData>(req: any): Promise<{ data: T; user: U | null; }> {
