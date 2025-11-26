@@ -117,6 +117,7 @@ export class Appserver<U extends AppserverData> {
 
         if (this.registered.has(action))
             throw new Error(`Action ${action} is already registered`);
+        this.registered.add(action)
 
         this.app.post(`/exec/${action}`, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
             const { status, data } = await (async () => {
