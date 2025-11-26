@@ -9,6 +9,7 @@ export { Type, Static, TSchema } from '@sinclair/typebox';
 export { Value } from '@sinclair/typebox/value';
 
 encode({}); // Fixes issue with msgpack not being included in build
+
 export type AppserverHandler<
     I extends AppserverData,
     U extends AppserverData,
@@ -35,6 +36,21 @@ export class AppserverHandledError extends AppserverError {
     }
 }
 
+/**
+ * Lightweight typed RPC runner that exposes POST `/exec/:action` endpoints using msgpack payloads
+ * and a GET `/metrics` endpoint for Prometheus gauges.
+ *
+ * Usage:
+ * const app = new Appserver(8080, parseToken, collectMetrics);
+ * app.register('sum', SumSchema, true, async (input, user) => ({ total: input.a + input.b }));
+ *
+ * Request requirements:
+ * - `Content-Type: application/vnd.msgpack`
+ * - Body is msgpack-encoded object matching the provided schema.
+ * - Optional `Authorization: Bearer <token>` header is decoded via the provided parseUser function.
+ *
+ * Responses are msgpack encoded objects with either handler data or `{ error, code, payload }` for handled errors.
+ */
 export class Appserver<U extends AppserverData> {
     private app: express.Express;
     private parseUser: AppserverUsergetter<U>;
@@ -105,6 +121,13 @@ export class Appserver<U extends AppserverData> {
         };
     }
 
+    /**
+     * Registers a msgpack RPC endpoint under `/exec/${action}`.
+     * @param action unique action name (duplicates throw)
+     * @param inputSchema typebox schema used for runtime validation
+     * @param auth when true rejects requests without a valid user
+     * @param handler business logic returning serializable data
+     */
     public register<
         ISchema extends TSchema,
         O extends AppserverData,
