@@ -4,6 +4,10 @@ import { Value } from '@sinclair/typebox/value';
 import { decode, encode } from "@msgpack/msgpack";
 import { AppserverData } from './common';
 
+// Helpful for avoiding sinclair version mismatch between this and the actual user of the package
+export { Type, Static, TSchema } from '@sinclair/typebox';
+export { Value } from '@sinclair/typebox/value';
+
 encode({}); // Fixes issue with msgpack not being included in build
 export type AppserverHandler<
     I extends AppserverData,
