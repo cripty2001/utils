@@ -39,6 +39,7 @@ export class Appserver<U extends AppserverData> {
     private app: express.Express;
     private parseUser: AppserverUsergetter<U>;
     private getMetrics: () => Record<string, number>;
+    private registered: Set<string> = new Set();
 
     constructor(port: number, parseUser: AppserverUsergetter<U>, getMetrics: () => Record<string, number>) {
         this.parseUser = parseUser;
@@ -113,6 +114,10 @@ export class Appserver<U extends AppserverData> {
         inputSchema: ISchema,
         auth: boolean,
         handler: AppserverHandler<I, U, O>): void {
+
+        if (this.registered.has(action))
+            throw new Error(`Action ${action} is already registered`);
+
         this.app.post(`/exec/${action}`, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
             const { status, data } = await (async () => {
                 try {
