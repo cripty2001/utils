@@ -4,6 +4,8 @@ import { Value } from '@sinclair/typebox/value';
 import { decode, encode } from "@msgpack/msgpack";
 import { AppserverData } from './common';
 
+export type { AppserverData };
+
 // Helpful for avoiding sinclair version mismatch between this and the actual user of the package
 export { Type, Static, TSchema } from '@sinclair/typebox';
 export { Value } from '@sinclair/typebox/value';

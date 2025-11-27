@@ -1,6 +1,8 @@
 import { AppserverData } from "./common";
 import { decode, encode } from "@msgpack/msgpack";
 
+export type { AppserverData };
+
 export class ClientError extends Error {
     constructor(message: string) {
         super(message);
