@@ -1,5 +1,6 @@
 
 import Handlebars from "handlebars";
+import mjml2html from "mjml";
 
 import { Type, type Static } from "@cripty2001/utils/appserver/server";
 
@@ -23,7 +24,7 @@ export const TEMPLATE_SCHEMA = Type.Object({
 });
 
 export type Template = Static<typeof TEMPLATE_SCHEMA>;
-export function genBuilder<T extends any>(config: Template): HandlebarsTemplateDelegate<T> {
+export function genBuilder<T extends any>(config: Template): (params: T) => { html: string } {
     const mappedContent = config.content
         .map(item => {
             switch (item.type) {
@@ -40,7 +41,7 @@ export function genBuilder<T extends any>(config: Template): HandlebarsTemplateD
         })
         .join('\n');
 
-    return Handlebars.compile(`
+    const builder = Handlebars.compile(`
         <mjml>
             <mj-head>
             <mj-style>
@@ -79,4 +80,19 @@ export function genBuilder<T extends any>(config: Template): HandlebarsTemplateD
             </mj-body>
         </mjml>
     `);
+
+    return (data: T) => {
+        let { html, errors } = mjml2html(
+            builder(data),
+            {
+                validationLevel: 'soft'
+            }
+        );
+        if (errors.length > 0)
+            throw new Error(`Invalid template: ${errors.map(e => e.message).join(', ')}`);
+
+        return {
+            html: html,
+        };
+    }
 }
