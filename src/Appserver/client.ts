@@ -35,9 +35,7 @@ export class Client {
             if (token === null)
                 return false;
 
-            console.log('getUser')
             const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
-            console.log('gotUser', user);
 
             return user !== null;
         }, 0);  // Sync execution
