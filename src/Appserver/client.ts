@@ -56,7 +56,7 @@ export class Client {
         action: string,
         input: I
     ): Promise<O> {
-        const res = await fetch(`${this.url}/${action}`, {
+        const res = await fetch(`${this.url}${action}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
