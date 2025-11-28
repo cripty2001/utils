@@ -34,7 +34,7 @@ export class Client {
             ({ authToken }) => authToken !== null
         );
     }
-    private static create(url: string): Client {
+    public static create(url: string): Client {
         return new Client(url);
     }
 
