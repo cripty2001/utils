@@ -1,5 +1,6 @@
-import { AppserverData } from "./common";
+import { Whispr } from "@cripty2001/whispr";
 import { decode, encode } from "@msgpack/msgpack";
+import { AppserverData } from "./common";
 
 export type { AppserverData };
 
@@ -23,12 +24,22 @@ export class ClientValidationError extends ClientError {
 
 
 export class Client {
-    constructor(private url: string) { }
+    private authToken: Whispr<string | null>;
+    public loggedIn: Whispr<boolean>;
 
-    private authToken: string | null = null;
+    private constructor(private url: string) {
+        [this.authToken, this.setAuthToken] = Whispr.create<string | null>(null);
+        this.loggedIn = Whispr.from(
+            { authToken: this.authToken },
+            ({ authToken }) => authToken !== null
+        );
+    }
+    private static create(url: string): Client {
+        return new Client(url);
+    }
 
     public setAuthToken(token: string | null) {
-        this.authToken = token;
+        this.setAuthToken(token ?? null);
     }
 
     public async exec<I extends AppserverData, O extends AppserverData>(
@@ -55,7 +66,7 @@ export class Client {
         switch (res.status) {
             case 401:
             case 403:
-                this.authToken = null;
+                this.setAuthToken(null);
                 throw new ClientError("Permission denied");
             case 200:
                 responseData = decoded as O;
