@@ -1,13 +1,13 @@
-import express, { type Express } from 'express';
-import { Static, TSchema } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
 import { decode, encode } from "@msgpack/msgpack";
+import { Static, TSchema, Type } from '@sinclair/typebox';
+import { Value } from '@sinclair/typebox/value';
+import express from 'express';
 import { AppserverData } from './common';
 
 export type { AppserverData };
 
 // Helpful for avoiding sinclair version mismatch between this and the actual user of the package
-export { Type, Static, TSchema } from '@sinclair/typebox';
+export { Static, TSchema, Type } from '@sinclair/typebox';
 export { Value } from '@sinclair/typebox/value';
 
 encode({}); // Fixes issue with msgpack not being included in build
@@ -68,6 +68,19 @@ export class Appserver<U extends AppserverData> {
 
         this.app.get('/metrics', async (req, res) => {
             await this.handleMetricsRequest(req, res);
+        });
+
+        this.registerAuth(this.app);
+    }
+
+    private registerAuth(app: express.Express): void {
+        this.unsafeRegister('/auth/whoami', Type.Object({}), false, async (input, user) => {
+            return {
+                user: Object.fromEntries(
+                    Object.entries(user ?? {})
+                        .filter(([key]) => !key.startsWith('_'))
+                )
+            };
         });
     }
 
@@ -139,12 +152,23 @@ export class Appserver<U extends AppserverData> {
         inputSchema: ISchema,
         auth: boolean,
         handler: AppserverHandler<I, U, O>): void {
+        this.unsafeRegister(`/exec/${action}`, inputSchema, auth, handler);
+    }
 
+    private unsafeRegister<
+        ISchema extends TSchema,
+        O extends AppserverData,
+        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
+    >(
+        action: string,
+        inputSchema: ISchema,
+        auth: boolean,
+        handler: AppserverHandler<I, U, O>): void {
         if (this.registered.has(action))
             throw new Error(`Action ${action} is already registered`);
         this.registered.add(action)
 
-        this.app.post(`/exec/${action}`, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
+        this.app.post(action, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
             const { status, data } = await (async () => {
                 try {
                     const { data: unsafeData, user } = await this.parseInput<I>(req);
