@@ -1,6 +1,6 @@
 import { Whispr, WhisprSetter } from "@cripty2001/whispr";
-import { sleep } from ".";
 import { isEqual } from "lodash";
+import { sleep } from ".";
 
 export type DispatcherStatePayload<T> =
     {
@@ -41,8 +41,9 @@ export class Dispatcher<I, O> {
      * Create a new dispatcher 
      * @param value The whispr value that will trigger f call when changed. Using this pattern instead of exposing a dispatch method allow to return the full dispatcher to anyone, without having to worry about them messing it
      * @param f The async function to call. It should return a promise that resolves to the data.
-     * @param DEBOUNCE_INTERVAL 
+     * @param DEBOUNCE_INTERVAL The debounce interval in milliseconds. Default to 200ms. The function will not be called if this time has not passed since the last call. If another change happens during the wait, the first function call will be aborted.
      * 
+     * @remarks If the debounce interval is 0, the function will be called synchronously, as a Whispr listener would do.
      * @remarks The value is deep checked for equality. The function will be called only if the value changed deeply
      */
     constructor(value: Whispr<I>, f: DispatcherFunction<I, O>, DEBOUNCE_INTERVAL: number = 200) {
@@ -143,8 +144,10 @@ export class Dispatcher<I, O> {
         const signals = this.reset();
 
         const toReturn = (async () => {
-            // Debouncing rapid changes
-            await sleep(this.DEBOUNCE_INTERVAL);
+            // Allow for sync operations
+            if (this.DEBOUNCE_INTERVAL > 0) {
+                await sleep(this.DEBOUNCE_INTERVAL);
+            }
             if (signals.controller.signal.aborted)
                 throw new DOMException('Debounced', 'AbortError');
 
