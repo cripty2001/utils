@@ -75,11 +75,13 @@ export class Appserver<U extends AppserverData> {
 
     private registerAuth(app: express.Express): void {
         this.unsafeRegister('/auth/whoami', Type.Object({}), false, async (input, user) => {
+            const mappedUser = Object.fromEntries(
+                Object.entries(user ?? {})
+                    .filter(([key]) => !key.startsWith('_'))
+            );
+
             return {
-                user: Object.fromEntries(
-                    Object.entries(user ?? {})
-                        .filter(([key]) => !key.startsWith('_'))
-                )
+                user: user !== null ? mappedUser : null
             };
         });
     }

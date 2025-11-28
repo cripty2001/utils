@@ -1,5 +1,6 @@
-import { Whispr } from "@cripty2001/whispr";
+import { Whispr, WhisprSetter } from "@cripty2001/whispr";
 import { decode, encode } from "@msgpack/msgpack";
+import { Dispatcher } from "../Dispatcher";
 import { AppserverData } from "./common";
 
 export type { AppserverData };
@@ -25,28 +26,37 @@ export class ClientValidationError extends ClientError {
 
 export class Client {
     private authToken: Whispr<string | null>;
-    public loggedIn: Whispr<boolean>;
+    public setAuthToken: WhisprSetter<string | null>;
+    public loggedIn: Dispatcher<string | null, boolean>;
 
     private constructor(private url: string) {
         [this.authToken, this.setAuthToken] = Whispr.create<string | null>(null);
-        this.loggedIn = Whispr.from(
-            { authToken: this.authToken },
-            ({ authToken }) => authToken !== null
-        );
-    }
-    public static create(url: string): Client {
-        return new Client(url);
+        this.loggedIn = new Dispatcher(this.authToken, async (token) => {
+            if (token === null)
+                return false;
+
+            const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
+
+            return user !== null;
+        }, 200);
     }
 
-    public setAuthToken(token: string | null) {
-        this.setAuthToken(token ?? null);
+    public static create(url: string): Client {
+        return new Client(url);
     }
 
     public async exec<I extends AppserverData, O extends AppserverData>(
         action: string,
         input: I
     ): Promise<O> {
-        const res = await fetch(`${this.url}/exec/${action}`, {
+        return this.unsafeExec(`/exec/${action}`, input);
+    }
+
+    private async unsafeExec<I extends AppserverData, O extends AppserverData>(
+        action: string,
+        input: I
+    ): Promise<O> {
+        const res = await fetch(`${this.url}/${action}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
