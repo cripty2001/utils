@@ -65,7 +65,7 @@ export class Client {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
-                ...(this.authToken !== null ? { "Authorization": `Bearer ${this.authToken}` } : {}),
+                ...(this.authToken.value !== null ? { "Authorization": `Bearer ${this.authToken.value}` } : {}),
             },
             body: new Blob(
                 [new Uint8Array(
