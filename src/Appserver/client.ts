@@ -27,17 +27,17 @@ export class ClientValidationError extends ClientError {
 export class Client {
     private authToken: Whispr<string | null>;
     private setAuthToken: WhisprSetter<string | null>;
-    public loggedIn: Dispatcher<string | null, boolean>;
+    public user: Dispatcher<string | null, AppserverData | null>;
 
     private constructor(private url: string) {
         [this.authToken, this.setAuthToken] = Whispr.create<string | null>(null);
-        this.loggedIn = new Dispatcher(this.authToken, async (token) => {
+        this.user = new Dispatcher(this.authToken, async (token) => {
             if (token === null)
-                return false;
+                return null;
 
             const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
 
-            return user !== null;
+            return user;
         }, 0);  // Sync execution
     }
 
@@ -47,7 +47,12 @@ export class Client {
 
     public async login(token: string): Promise<boolean> {
         this.setAuthToken(token);
-        return await this.loggedIn.filtered.load()
+        return await this.user.data.wait(data => {
+            if (data.loading)
+                return;
+
+            return data.ok
+        });
     }
 
     public async exec<I extends AppserverData, O extends AppserverData>(
