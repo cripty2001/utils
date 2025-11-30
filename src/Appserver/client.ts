@@ -90,30 +90,30 @@ export class Client {
             ),
         });
 
+        if (res.status === 401 || res.status === 403) {
+            if (testedToken === this.authToken.value) {
+                this.setAuthToken(null);
+            }
+            throw new ClientError("Permission denied");
+        }
+
+        if (res.status === 404)
+            throw new ClientError("Not found");
+
         const decoded = decode(await res.arrayBuffer());
         let responseData;
 
-        switch (res.status) {
-            case 404:
-                throw new ClientError("Not found");
-            case 401:
-            case 403:
-                if (testedToken === this.authToken.value) {
-                    this.setAuthToken(null);
-                }
-                throw new ClientError("Permission denied");
-            case 200:
-                responseData = decoded as O;
-                return responseData;
-            case 422:
-                responseData = decoded as { errors: any[] };
-                throw new ClientValidationError(responseData.errors);
-            case 400:
-            case 500:
-                responseData = decoded as { error: string; code: string; payload: AppserverData; };
-                throw new ClientServerError(responseData.code, responseData.error, responseData.payload);
-            default:
-                throw new ClientError(`Unexpected server response: ${res.status}`);
+        if (res.status === 200)
+            return decoded as O;
+        if (res.status === 422) {
+            responseData = decoded as { errors: any[] };
+            throw new ClientValidationError(responseData.errors);
         }
+        if (res.status === 400 || res.status === 500) {
+            responseData = decoded as { error: string; code: string; payload: AppserverData; };
+            throw new ClientServerError(responseData.code, responseData.error, responseData.payload);
+        }
+
+        throw new ClientError(`Unexpected server response: ${res.status}`);
     }
 }
