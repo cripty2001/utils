@@ -28,7 +28,7 @@ export function build(config: T): string {
 
   const toReturn = `
     <mj-section padding="0">
-      <mj-column width="100%" padding="0">
+      <mj-column padding="0">
         ${imgs}
       </mj-column>
     </mj-section>

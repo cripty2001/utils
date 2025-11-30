@@ -16,7 +16,7 @@ export type T = Static<typeof SCHEMA>;
 export function build(config: T): string {
   return `
     <mj-section padding="0">
-      <mj-column width="100%" padding-top="${config.padding.top}px">
+      <mj-column padding-top="${config.padding.top}px">
         ${config.content.map(item => `
           <mj-text font-size="${config.size}px" font-weight="${config.weight}" color="${config.color}">
             ${item}
