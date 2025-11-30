@@ -74,11 +74,13 @@ export class Client {
         action: string,
         input: I
     ): Promise<O> {
+        const testedToken = this.authToken.value
+
         const res = await fetch(`${this.url}${action}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
-                ...(this.authToken.value !== null ? { "Authorization": `Bearer ${this.authToken.value}` } : {}),
+                ...(testedToken !== null ? { "Authorization": `Bearer ${testedToken}` } : {}),
             },
             body: new Blob(
                 [new Uint8Array(
@@ -94,7 +96,11 @@ export class Client {
         switch (res.status) {
             case 401:
             case 403:
-                this.setAuthToken(null);
+                if (testedToken === this.authToken.value) {
+                    console.log("Invalidating token");
+                    this.setAuthToken(null);
+                    console.log("Token invalidated");
+                }
                 throw new ClientError("Permission denied");
             case 200:
                 responseData = decoded as O;
