@@ -128,17 +128,21 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
 
     if (value !== undefined && setValue !== undefined) {
         useEffect(() => {
+            console.log('syncing value downstream', value, '->', v);
+
             if (isEqual(v, value))
                 return;
+            console.log("SYNCED")
 
             setV(value);
         }, [value, v, setV]);
 
 
         useEffect(() => {
+            console.log('syncing value upstream', v, '->', value);
             if (isEqual(v, value))
                 return;
-
+            console.log("SYNCED");
             setValue(v);
         }, [v, value, setValue]);
     }
