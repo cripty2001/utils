@@ -1,9 +1,9 @@
 import { Whispr } from "@cripty2001/whispr";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
-import { Dispatcher } from "./Dispatcher";
 import { CURRENT_TS_MS } from ".";
+import { Dispatcher } from "./Dispatcher";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -107,6 +107,34 @@ export function useDebounced<T>(value: T): T {
     }, [value]);
 
     return debounced;
+}
+
+/**
+ * Allow for having a locally defined state, that can be kept synced with an external one, if available.
+ * @param def The default value
+ * @param value The value to sync
+ * @param setValue The function to set the value
+ * @returns The synced value and the function to set it
+ */
+export function useSynced<T extends any>(def: T, value: T | undefined, setValue: ((value: T) => void) | undefined): [T, (value: T) => void] {
+    const [v, setV] = useState(def);
+
+    if (value !== undefined) {
+        useEffect(() => {
+            setV(value);
+        }, [value, setV]);
+    }
+
+    if (setValue !== undefined) {
+        useEffect(() => {
+            if (isEqual(v, value))
+                return;
+
+            setValue(v);
+        }, [v, setValue]);
+    }
+
+    return [v, setV];
 }
 
 /**
