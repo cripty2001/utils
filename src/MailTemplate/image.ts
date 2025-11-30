@@ -1,15 +1,15 @@
-import { Type, type Static } from "@cripty2001/utils/appserver/server";
+import { Type, type Static } from "@sinclair/typebox";
 
 export const SCHEMA = Type.Object({
-    type: Type.Literal("image"),
-    mobile: Type.String(),
-    desktop: Type.Union([Type.String(), Type.Null()]),
-    link: Type.Union([Type.String(), Type.Null()]),
-    alt: Type.String()
+  type: Type.Literal("image"),
+  mobile: Type.String(),
+  desktop: Type.Union([Type.String(), Type.Null()]),
+  link: Type.Union([Type.String(), Type.Null()]),
+  alt: Type.String()
 });
 export type T = Static<typeof SCHEMA>;
 export function build(config: T): string {
-    const img = (breakpoint: "onlyMobile" | "onlyDesktop" | null, url: string) => `
+  const img = (breakpoint: "onlyMobile" | "onlyDesktop" | null, url: string) => `
     <mj-image
       css-class="${breakpoint ?? ''}"
       src="${url}"
@@ -19,14 +19,14 @@ export function build(config: T): string {
     />
   `;
 
-    const imgs = config.desktop === null ?
-        img(null, config.mobile) :
-        [
-            img("onlyDesktop", config.desktop),
-            img("onlyMobile", config.mobile)
-        ].join('\n')
+  const imgs = config.desktop === null ?
+    img(null, config.mobile) :
+    [
+      img("onlyDesktop", config.desktop),
+      img("onlyMobile", config.mobile)
+    ].join('\n')
 
-    const toReturn = `
+  const toReturn = `
     <mj-section padding="0">
       <mj-column width="100%" padding="0">
         ${imgs}
@@ -34,5 +34,5 @@ export function build(config: T): string {
     </mj-section>
   `;
 
-    return toReturn;
+  return toReturn;
 }

@@ -1,20 +1,20 @@
-import { Type, type Static } from "@cripty2001/utils/appserver/server";
+import { Type, type Static } from "@sinclair/typebox";
 
 export const SCHEMA = Type.Object({
-    type: Type.Literal("text"),
-    size: Type.Number(),
-    weight: Type.Number(),
-    color: Type.String(),
-    padding: Type.Object({
-        top: Type.Number()
-    }),
-    content: Type.Array(Type.String())
+  type: Type.Literal("text"),
+  size: Type.Number(),
+  weight: Type.Number(),
+  color: Type.String(),
+  padding: Type.Object({
+    top: Type.Number()
+  }),
+  content: Type.Array(Type.String())
 });
 
 export type T = Static<typeof SCHEMA>;
 
 export function build(config: T): string {
-    return `
+  return `
     <mj-section padding="0">
       <mj-column width="100%" padding-top="${config.padding.top}px">
         ${config.content.map(item => `

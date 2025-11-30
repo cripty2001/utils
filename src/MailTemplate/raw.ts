@@ -1,4 +1,4 @@
-import { Type, type Static } from "@cripty2001/utils/appserver/server";
+import { Type, type Static } from "@sinclair/typebox";
 
 export const SCHEMA = Type.Object({
     type: Type.Literal("raw"),
