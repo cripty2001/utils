@@ -97,9 +97,7 @@ export class Client {
             case 401:
             case 403:
                 if (testedToken === this.authToken.value) {
-                    console.log("Invalidating token");
                     this.setAuthToken(null);
-                    console.log("Token invalidated");
                 }
                 throw new ClientError("Permission denied");
             case 200:
