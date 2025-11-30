@@ -125,6 +125,10 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
     )
         throw new Error('Either value and setValue must be provided, or both must be undefined');
 
+    const setValueRef = useRef(setValue);
+    useEffect(() => {
+        setValueRef.current = setValue;
+    }, [setValue]);
 
     if (value !== undefined && setValue !== undefined) {
         useEffect(() => {
@@ -138,8 +142,8 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
         useEffect(() => {
             if (isEqual(v, value))
                 return;
-            setValue(v);
-        }, [v, value, setValue]);
+            setValueRef.current?.(v);
+        }, [v, value]);
     }
 
     return [v, setV];
