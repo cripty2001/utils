@@ -130,23 +130,32 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
         setValueRef.current = setValue;
     }, [setValue]);
 
-    if (value !== undefined && setValue !== undefined) {
-        useEffect(() => {
-            if (isEqual(v, value))
-                return;
+    // Only sync downstream (external -> local)
+    useEffect(() => {
+        if (value === undefined) return;
+        if (isEqual(v, value)) return;
 
-            setV(value);
-        }, [value, v, setV]);
+        console.log('SYNC DOWNSTREAM', value);
+        setV(value);
+    }, [value]);
 
+    // Return a setter that updates both
+    const syncedSetter = useCallback((newValue: React.SetStateAction<T>) => {
+        setV(prev => {
+            const resolved = typeof newValue === 'function'
+                ? (newValue as (prev: T) => T)(prev)
+                : newValue;
 
-        useEffect(() => {
-            if (isEqual(v, value))
-                return;
-            setValueRef.current?.(v);
-        }, [v, value]);
-    }
+            // Update external immediately if available
+            if (setValueRef.current) {
+                setValueRef.current(resolved);
+            }
 
-    return [v, setV];
+            return resolved;
+        });
+    }, []);
+
+    return [v, syncedSetter];
 }
 
 /**
