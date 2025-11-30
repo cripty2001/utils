@@ -71,7 +71,6 @@ export function genBuilder<T extends any>(config: Template): (params: T) => { ht
                 color="${config.style.textColor}"
                 />
                 <mj-body width="700px" />
-                <mj-section width="700px" padding="0" />
             </mj-attributes>
             </mj-head>
 
