@@ -2,7 +2,7 @@
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
 
-import { Type, type Static } from "@cripty2001/utils/appserver/server";
+import { Type, type Static } from "../Appserver/server.js";
 
 import { SCHEMA as IMAGE_SCHEMA, build as buildImage } from "./image.js";
 import { SCHEMA as RAW_SCHEMA, build as buildRaw } from "./raw.js";
