@@ -94,6 +94,8 @@ export class Client {
         let responseData;
 
         switch (res.status) {
+            case 404:
+                throw new ClientError("Not found");
             case 401:
             case 403:
                 if (testedToken === this.authToken.value) {
