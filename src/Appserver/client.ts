@@ -30,7 +30,15 @@ export class Client {
     public user: Dispatcher<string | null, AppserverData | null>;
 
     private constructor(private url: string) {
-        [this.authToken, this.setAuthToken] = Whispr.create<string | null>(null);
+        const [_authToken, _setAuthToken] = Whispr.create<string | null>(null);
+        this.authToken = _authToken;
+
+        this.setAuthToken = (t: string | null) => {
+            if (t === this.authToken.value)
+                return true;
+            return _setAuthToken(t);
+        };
+
         this.user = new Dispatcher(this.authToken, async (token) => {
             if (token === null)
                 return null;
