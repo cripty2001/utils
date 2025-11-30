@@ -116,7 +116,7 @@ export function useDebounced<T>(value: T): T {
  * @param setValue The function to set the value
  * @returns The synced value and the function to set it
  */
-export function useSynced<T extends any>(def: T, value: T | undefined, setValue: ((value: T) => void) | undefined): [T, (value: T) => void] {
+export function useSynced<T extends any>(def: T, value: T | undefined, setValue: ((value: T) => void) | undefined): [T, React.Dispatch<React.SetStateAction<T>>] {
     const [v, setV] = useState(def);
 
     if (value !== undefined) {
