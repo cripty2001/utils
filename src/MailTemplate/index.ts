@@ -4,9 +4,9 @@ import mjml2html from "mjml";
 
 import { Type, type Static } from "@sinclair/typebox";
 
-import { SCHEMA as IMAGE_SCHEMA, build as buildImage } from "./image.js";
-import { SCHEMA as RAW_SCHEMA, build as buildRaw } from "./raw.js";
-import { SCHEMA as TEXT_SCHEMA, build as buildText } from "./text.js";
+import { SCHEMA as IMAGE_SCHEMA, build as buildImage } from "./image";
+import { SCHEMA as RAW_SCHEMA, build as buildRaw } from "./raw";
+import { SCHEMA as TEXT_SCHEMA, build as buildText } from "./text";
 
 export const TEMPLATE_SCHEMA = Type.Object({
     style: Type.Object({
