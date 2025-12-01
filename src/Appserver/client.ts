@@ -60,7 +60,7 @@ export class Client {
         return await this.user.data.wait(data => {
             if (data.loading)
                 return;
-
+            console.log('Login result in waiter: ', data);
             return data.ok
         });
     }
