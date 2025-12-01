@@ -11,6 +11,12 @@ export class ClientError extends Error {
     }
 }
 
+export class ClientAuthError extends ClientError {
+    constructor() {
+        super("Authentication error");
+    }
+}
+
 export class ClientServerError extends Error {
     constructor(public code: string, message: string, public payload: AppserverData = {}) {
         super(message);
@@ -69,9 +75,21 @@ export class Client {
         action: string,
         input: I
     ): Promise<O> {
-        return this.unsafeExec(`/exec/${action}`, input);
+        return await this.unsafeExec<I, O>(`/exec/${action}`, input)
+            .catch(e => {
+                if (e instanceof ClientAuthError) {
+                    this.setAuthToken(null);
+                }
+                throw e;
+            });
     }
 
+    /**
+     * Executes an action on the server without invalidating the auth token on auth errors.
+     * @param action - The action to execute
+     * @param input - The input to the action
+     * @returns The result of the action
+     */
     private async unsafeExec<I extends AppserverData, O extends AppserverData>(
         action: string,
         input: I
@@ -92,12 +110,8 @@ export class Client {
             ),
         });
 
-        if (res.status === 401 || res.status === 403) {
-            if (testedToken === this.authToken.value) {
-                this.setAuthToken(null);
-            }
+        if (res.status === 401 || res.status === 403)
             throw new ClientError("Permission denied");
-        }
 
         if (res.status === 404)
             throw new ClientError("Not found");
