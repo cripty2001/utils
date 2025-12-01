@@ -43,8 +43,10 @@ export class Client {
             if (token === null)
                 return null;
 
+            console.log('Attempting login with token: ', token);
             const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
 
+            console.log('Login successful: ', user);
             return user;
         }, 0);  // Sync execution
     }
