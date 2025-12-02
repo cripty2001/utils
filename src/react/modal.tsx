@@ -20,7 +20,7 @@ export function ModalComponent(props: ModalComponentProps) {
     return (
         <div
             id={id}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-6"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 h-screen w-screen"
             style={{ zIndex: zIndex }}
             onClick={() => setOpen(false)}
         >
