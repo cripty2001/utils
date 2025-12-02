@@ -1,7 +1,7 @@
 import Button from "./button"
-import InputComponent from "./input"
+import InputComponent, { InputComponentPropsVariants } from "./input"
 
-export type FormComponentPropsInput<Variants extends Record<string, string>> = {
+export type FormComponentPropsInput = {
     label: string,
     required: boolean,
     key: string,
@@ -16,16 +16,16 @@ export type FormComponentPropsInput<Variants extends Record<string, string>> = {
     )
 
 
-export type FormComponentProps<T extends Record<string, string>, Variants extends Record<string, string>> = {
-    inputs: FormComponentPropsInput<Variants>[],
+export type FormComponentProps<T extends Record<string, string>, V extends InputComponentPropsVariants> = {
+    inputs: FormComponentPropsInput[],
     onSubmit: (values: T) => void,
     submitLabel: string,
     value: T,
     setValue: React.Dispatch<React.SetStateAction<T>>
-    variants: Variants
+    variants: V
 }
 
-export default function FormComponent<T extends Record<string, string>, Variants extends Record<string, string>>(props: FormComponentProps<T, Variants>) {
+export default function FormComponent<T extends Record<string, string>, V extends InputComponentPropsVariants>(props: FormComponentProps<T, V>) {
     return (
         <div className="flex flex-col gap-4">
             {props.inputs.map(input => (() => {

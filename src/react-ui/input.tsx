@@ -2,21 +2,25 @@ import { copyToClipboard } from "@cripty2001/utils";
 import { CopyIcon } from "lucide-react";
 import { useState } from "react";
 
-export type InputComponentProps<Variants extends Record<string, string>> = {
+export type InputComponentPropsVariants = Record<string, string> & {
+    default: string
+}
+
+export type InputComponentProps<V extends InputComponentPropsVariants> = {
     label?: string,
     value: string,
     setValue: (value: string) => void,
     required?: boolean,
     children: ({ value, setValue, className }: { value: string, setValue: (value: string) => void, className: string }) => React.ReactNode,
     copy?: boolean,
-    variant?: keyof Variants,
+    variant?: keyof V,
     validate?: (value: string) => void,
-    variants: Variants
+    variants: V
 }
 
-export default function InputComponent<Variants extends Record<string, string>>(props: InputComponentProps<Variants>) {
-    const variant = props.variant ?? ""
-    const baseClassName = props.variants[variant] ?? ""
+export default function InputComponent<Variants extends InputComponentPropsVariants>(props: InputComponentProps<Variants>) {
+    const variant = props.variant
+    const baseClassName = props.variants[variant ?? "default"]
 
     const [error, setError] = useState<string | null>(null)
 
