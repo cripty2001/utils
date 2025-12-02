@@ -6,36 +6,61 @@ export type TableProps = {
 export default function Table({ value, headers }: TableProps) {
     if (value.length === 0) {
         return (
-            <div className="text-center py-8 text-gray-600 dark:text-gray-400">No data found</div>
+            <div style={{ textAlign: 'center', paddingTop: '2rem', paddingBottom: '2rem', color: '#4b5563' }}>No data found</div>
         )
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-gray-100 dark:bg-gray-700">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%' }}>
+                    <thead style={{ backgroundColor: '#f3f4f6' }}>
                         <tr>
                             {headers.map((header, index) => (
                                 <th
                                     key={index}
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    style={{
+                                        paddingLeft: '1.5rem',
+                                        paddingRight: '1.5rem',
+                                        paddingTop: '0.75rem',
+                                        paddingBottom: '0.75rem',
+                                        textAlign: 'left',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 500,
+                                        color: '#6b7280',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em'
+                                    }}
                                 >
                                     {header}
                                 </th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody style={{ backgroundColor: 'white' }}>
                         {value.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <tr
+                                key={rowIndex}
+                                style={{
+                                    borderTop: rowIndex > 0 ? '1px solid #e5e7eb' : 'none',
+                                    transition: 'background-color 0.15s ease-in-out'
+                                }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#f9fafb' }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'white' }}
+                            >
                                 {row.map((cell, cellIndex) => (
                                     <td
                                         key={cellIndex}
-                                        className={`px-6 py-4 whitespace-nowrap text-sm ${cellIndex === 0
-                                            ? "font-medium text-gray-900 dark:text-white"
-                                            : "text-gray-600 dark:text-gray-400"
-                                            }`}
+                                        style={{
+                                            paddingLeft: '1.5rem',
+                                            paddingRight: '1.5rem',
+                                            paddingTop: '1rem',
+                                            paddingBottom: '1rem',
+                                            whiteSpace: 'nowrap',
+                                            fontSize: '0.875rem',
+                                            fontWeight: cellIndex === 0 ? 500 : 400,
+                                            color: cellIndex === 0 ? '#111827' : '#4b5563'
+                                        }}
                                     >
                                         {cell}
                                     </td>

@@ -27,7 +27,7 @@ export type FormComponentProps<T extends Record<string, string>, V extends Input
 
 export default function FormComponent<T extends Record<string, string>, V extends InputComponentPropsVariants>(props: FormComponentProps<T, V>) {
     return (
-        <div className="flex flex-col gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {props.inputs.map(input => (() => {
                 const value = props.value[input.key]
                 const setValue = (v: string) => props.setValue(prev => ({
@@ -84,7 +84,7 @@ export default function FormComponent<T extends Record<string, string>, V extend
                             )}
                         </InputComponent>
                     default:
-                        return <div className="text-red-500 bg-white">Unknown input type</div>
+                        return <div style={{ color: '#ef4444', backgroundColor: 'white' }}>Unknown input type</div>
                 }
             })())}
             <Button title={props.submitLabel} onClick={() => props.onSubmit(props.value)} />

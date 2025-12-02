@@ -25,21 +25,21 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
     const [error, setError] = useState<string | null>(null)
 
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex flex-row justify-between items-center gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                 {props.label &&
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
                         {props.label}
                     </label>
                 }
                 {props.copy &&
                     <CopyIcon
-                        className="w-4 h-4 cursor-pointer"
+                        style={{ width: '1rem', height: '1rem', cursor: 'pointer' }}
                         onClick={() => copyToClipboard(props.value)}
                     />
                 }
             </div>
-            <div className="relative">
+            <div style={{ position: 'relative' }}>
                 {props.children({
                     value: props.value,
                     setValue: (v) => {
@@ -59,7 +59,7 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
                 })}
             </div>
             {error &&
-                <div className="text-red-500 text-xs">
+                <div style={{ color: '#ef4444', fontSize: '0.75rem' }}>
                     {error}
                 </div>
             }
