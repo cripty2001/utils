@@ -2,8 +2,12 @@ import { CopyIcon } from "lucide-react";
 import { useState } from "react";
 import { copyToClipboard } from "../index";
 
-export type InputComponentPropsVariants = Record<string, string> & {
-    default: string
+export type InputComponentPropsVariantsItem = {
+    input: string,
+    label: string,
+}
+export type InputComponentPropsVariants = Record<string, InputComponentPropsVariantsItem> & {
+    default: InputComponentPropsVariantsItem
 }
 
 export type InputComponentProps<V extends InputComponentPropsVariants> = {
