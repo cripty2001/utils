@@ -1,10 +1,11 @@
 import Button from "./button"
 import InputComponent, { InputComponentPropsVariants } from "./input"
 
-export type FormComponentPropsInput = {
+export type FormComponentPropsInput<V extends InputComponentPropsVariants> = {
     label: string,
     required: boolean,
     key: string,
+    variant: keyof V
 } & (
         {
             type: "text" | "email" | "password" | "tel",
@@ -17,7 +18,7 @@ export type FormComponentPropsInput = {
 
 
 export type FormComponentProps<T extends Record<string, string>, V extends InputComponentPropsVariants> = {
-    inputs: FormComponentPropsInput[],
+    inputs: FormComponentPropsInput<V>[],
     onSubmit: (values: T) => void,
     submitLabel: string,
     value: T,
@@ -43,7 +44,7 @@ export default function FormComponent<T extends Record<string, string>, V extend
                             label={input.label}
                             value={value}
                             setValue={setValue}
-                            variant="form"
+                            variant={input.variant}
                             variants={props.variants}
                         >
                             {({ value, setValue, className }) => (
@@ -62,7 +63,7 @@ export default function FormComponent<T extends Record<string, string>, V extend
                             label={input.label}
                             value={value}
                             setValue={setValue}
-                            variant="form"
+                            variant={input.variant}
                             variants={props.variants}
                             required={input.required}
                             validate={(v) => {
