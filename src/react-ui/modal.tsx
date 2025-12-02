@@ -9,7 +9,7 @@ export type ModalComponentProps = {
 
 let modalCount = 0
 
-export function ModalComponent(props: ModalComponentProps) {
+export default function ModalComponent(props: ModalComponentProps) {
     const zIndex = useRef(1000 + modalCount++).current;
     const id = useRef(`modal-${zIndex}`).current;
 
