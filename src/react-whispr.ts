@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isEqual } from "lodash";
 import { CURRENT_TS_MS } from ".";
 import { Dispatcher } from "./Dispatcher";
+import { SearcherData } from "./Searcher";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -209,4 +210,15 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     }, [currTs, rtf]);
 
     return cb;
+}
+
+/**
+ * React shorthand for the Searcher
+ * @param data The data to search on (static, the hook must be re-called if those data changes)
+ * @param q The query to search for (dynamic, can be updated to have the returned results updated)
+ * @return The filtered data
+ * 
+ */
+export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData<T>[] {
+    const searcher = 
 }
