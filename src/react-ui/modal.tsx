@@ -20,12 +20,12 @@ export default function ModalComponent(props: ModalComponentProps) {
     return (
         <div
             id={id}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 h-screen w-screen"
+            className="fixed t-0 l-0 r-0 b-0 bg-black/50 flex items-center justify-center p-6 h-screen w-screen"
             style={{ zIndex: zIndex }}
             onClick={() => setOpen(false)}
         >
             <div
-                className="w-full animate-slide-up"
+                className="max-w-full animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {props.children}
