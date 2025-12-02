@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isEqual } from "lodash";
 import { CURRENT_TS_MS } from ".";
 import { Dispatcher } from "./Dispatcher";
-import { SearcherData } from "./Searcher";
+import { SearcherData, useSearcher_w } from "./Searcher";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -220,5 +220,7 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
  * 
  */
 export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData<T>[] {
-    const searcher = 
+    const q_w = useWhispr(q)
+    const searcher = useSearcher_w(data, q_w)
+    return useWhisprValue(searcher)
 }
