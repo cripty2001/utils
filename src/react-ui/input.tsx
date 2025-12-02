@@ -1,10 +1,11 @@
-import { CopyIcon } from "lucide-react";
+import { CopyIcon, LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { copyToClipboard } from "../index";
 
 export type InputComponentPropsVariantsItem = {
     input: string,
     label: string,
+    wrapper: string,
 }
 export type InputComponentPropsVariants = Record<string, InputComponentPropsVariantsItem> & {
     default: InputComponentPropsVariantsItem
@@ -12,6 +13,7 @@ export type InputComponentPropsVariants = Record<string, InputComponentPropsVari
 
 export type InputComponentProps<V extends InputComponentPropsVariants> = {
     label?: string,
+    icon?: React.ReactElement<LucideIcon>,
     value: string,
     setValue: (value: string) => void,
     required?: boolean,
@@ -43,24 +45,31 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
                     />
                 }
             </div>
-            <div style={{ position: 'relative' }}>
-                {props.children({
-                    value: props.value,
-                    setValue: (v) => {
-                        try {
-                            if (props.required && v === "")
-                                throw new Error("Required field is empty")
+            <div style={{ position: 'relative' }} className={baseClassName.wrapper}>
+                {props.icon &&
+                    <div style={{ position: 'absolute', left: '0.5rem', top: '0.5rem' }}>
+                        {props.icon}
+                    </div>
+                }
+                <div style={{ paddingLeft: props.icon ? '2rem' : '0.5rem' }}>
+                    {props.children({
+                        value: props.value,
+                        setValue: (v) => {
+                            try {
+                                if (props.required && v === "")
+                                    throw new Error("Required field is empty")
 
-                            props.validate?.(v)
-                            props.setValue(v)
-                            setError(null)
-                        }
-                        catch (e: any) {
-                            setError(e.message)
-                        }
-                    },
-                    className: baseClassName.input
-                })}
+                                props.validate?.(v)
+                                props.setValue(v)
+                                setError(null)
+                            }
+                            catch (e: any) {
+                                setError(e.message)
+                            }
+                        },
+                        className: baseClassName.input
+                    })}
+                </div>
             </div>
             {error &&
                 <div style={{ color: '#ef4444', fontSize: '0.75rem' }}>
