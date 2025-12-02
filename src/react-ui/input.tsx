@@ -32,7 +32,7 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                 {props.label &&
-                    <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
+                    <label className={baseClassName.label}>
                         {props.label}
                     </label>
                 }
@@ -59,7 +59,7 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
                             setError(e.message)
                         }
                     },
-                    className: baseClassName
+                    className: baseClassName.input
                 })}
             </div>
             {error &&
