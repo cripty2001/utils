@@ -1,11 +1,12 @@
+import { useMemo } from "react"
+import { TypeofRecord } from ".."
 import Button from "./button"
 import InputComponent, { InputComponentPropsVariants } from "./input"
 
-export type FormComponentPropsInput<V extends InputComponentPropsVariants> = {
+export type FormComponentPropsInput = {
     label: string,
     required: boolean,
-    key: string,
-    variant: keyof V
+    key: string
 } & (
         {
             type: "text" | "email" | "password" | "tel",
@@ -17,16 +18,22 @@ export type FormComponentPropsInput<V extends InputComponentPropsVariants> = {
     )
 
 
-export type FormComponentProps<T extends Record<string, string>, V extends InputComponentPropsVariants> = {
-    inputs: FormComponentPropsInput<V>[],
+export type FormComponentProps<T extends Record<string, string>> = {
+    inputs: FormComponentPropsInput[],
     onSubmit: (values: T) => void,
     submitLabel: string,
     value: T,
     setValue: React.Dispatch<React.SetStateAction<T>>
-    variants: V
+    variant: TypeofRecord<InputComponentPropsVariants> & {
+        button: string
+    }
 }
 
-export default function FormComponent<T extends Record<string, string>, V extends InputComponentPropsVariants>(props: FormComponentProps<T, V>) {
+export default function FormComponent<T extends Record<string, string>>(props: FormComponentProps<T>) {
+    const variants = useMemo(() => ({
+        default: props.variant
+    }), [props.variant])
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {props.inputs.map(input => (() => {
@@ -44,8 +51,8 @@ export default function FormComponent<T extends Record<string, string>, V extend
                             label={input.label}
                             value={value}
                             setValue={setValue}
-                            variant={input.variant}
-                            variants={props.variants}
+                            variant="default"
+                            variants={variants}
                         >
                             {({ value, setValue, className }) => (
                                 <input
@@ -63,8 +70,8 @@ export default function FormComponent<T extends Record<string, string>, V extend
                             label={input.label}
                             value={value}
                             setValue={setValue}
-                            variant={input.variant}
-                            variants={props.variants}
+                            variant="default"
+                            variants={variants}
                             required={input.required}
                             validate={(v) => {
                                 if (!input.options.includes(v))
@@ -88,7 +95,7 @@ export default function FormComponent<T extends Record<string, string>, V extend
                         return <div style={{ color: '#ef4444', backgroundColor: 'white' }}>Unknown input type</div>
                 }
             })())}
-            <Button title={props.submitLabel} onClick={() => props.onSubmit(props.value)} />
+            <Button className={variants.default.button} title={props.submitLabel} onClick={() => props.onSubmit(props.value)} />
         </div>
     )
 }
