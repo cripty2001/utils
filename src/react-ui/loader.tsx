@@ -1,7 +1,7 @@
-import type { AppserverData } from "@cripty2001/utils/appserver/client"
-import type { Dispatcher, DispatcherStatePayload } from "@cripty2001/utils/dispatcher"
-import { useWhisprValue } from "@cripty2001/utils/react-whispr"
 import type React from "react"
+import type { AppserverData } from "../Appserver/client"
+import type { Dispatcher, DispatcherStatePayload } from "../Dispatcher"
+import { useWhisprValue } from "../react-whispr"
 
 export type LoaderProps<T extends AppserverData> = {
     data: Dispatcher<unknown, T>

@@ -1,6 +1,6 @@
-import { copyToClipboard } from "@cripty2001/utils";
 import { CopyIcon } from "lucide-react";
 import { useState } from "react";
+import { copyToClipboard } from "../index";
 
 export type InputComponentPropsVariants = Record<string, string> & {
     default: string
