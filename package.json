@@ -85,6 +85,10 @@
     "./react": {
       "import": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts"
+    },
+    "./react-ui": {
+      "import": "./dist/react-ui/index.js",
+      "types": "./dist/react-ui/index.d.ts"
     }
   }
 }
