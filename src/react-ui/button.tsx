@@ -27,11 +27,24 @@ export default function Button({ title, onClick, className }: ButtonProps) {
         <>
             <div
                 onClick={handleClick}
-                className={`cursor-pointer ${className}`}
+                className={className}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                }}
             >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <div>{title}</div>}
+                {loading ? <Loader2 style={{
+                    width: '1rem',
+                    height: '1rem',
+                    animation: 'spin 1s linear infinite',
+                }} /> : <div>{title}</div>}
             </div>
-            {error && <div className="text-red-500">{error}</div>}
+            {error && <div style={{
+                color: '#ef4444'
+            }}>{error}</div>}
         </>
     )
 }
