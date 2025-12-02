@@ -81,6 +81,10 @@
     "./mail-template": {
       "import": "./dist/MailTemplate/index.js",
       "types": "./dist/MailTemplate/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/MailTemplate/index.js",
+      "types": "./dist/MailTemplate/index.d.ts"
     }
   }
 }
