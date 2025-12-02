@@ -1,6 +1,6 @@
-import { useRelTime, useWhisprValue } from "../react-whispr";
-import logger from "./Logger";
 import { X } from "lucide-react";
+import logger from "../Logger/Logger";
+import { useRelTime, useWhisprValue } from "../react-whispr";
 
 export function LoggerReactDisplay() {
     const messages = useWhisprValue(logger.lines);
