@@ -13,6 +13,7 @@ export default function Button({ title, onClick, className }: ButtonProps) {
     const handleClick = async () => {
         if (loading) return;
         setLoading(true);
+        setError(null);
         (async () => {
             const p = onClick()
             if (p instanceof Promise) {
