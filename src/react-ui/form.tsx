@@ -36,7 +36,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {props.inputs.map(input => (() => {
+            {props.inputs.map((input, index) => (() => {
                 const value = props.value[input.key]
                 const setValue = (v: string) => props.setValue(prev => ({
                     ...prev,
@@ -53,6 +53,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                             setValue={setValue}
                             variant="default"
                             variants={variants}
+                            key={index}
                         >
                             {({ value, setValue, className }) => (
                                 <input
@@ -72,6 +73,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                             setValue={setValue}
                             variant="default"
                             variants={variants}
+                            key={index}
                             required={input.required}
                             validate={(v) => {
                                 if (!input.options.includes(v))
