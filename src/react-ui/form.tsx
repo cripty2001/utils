@@ -20,7 +20,7 @@ export type FormComponentPropsInput = {
 
 export type FormComponentProps<T extends Record<string, string>> = {
     inputs: FormComponentPropsInput[],
-    onSubmit: (values: T) => void,
+    onSubmit?: (values: T) => void,
     submitLabel: string,
     value: T,
     setValue: React.Dispatch<React.SetStateAction<T>>
@@ -97,7 +97,9 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                         return <div style={{ color: '#ef4444', backgroundColor: 'white' }}>Unknown input type</div>
                 }
             })())}
-            <Button className={variants.default.button} title={props.submitLabel} onClick={() => props.onSubmit(props.value)} />
+            {props.onSubmit &&
+                <Button className={variants.default.button} title={props.submitLabel} onClick={() => props.onSubmit?.(props.value)} />
+            }
         </div>
     )
 }
