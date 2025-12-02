@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { useSynced } from "../react-whispr";
 
 const slideUpKeyframes = `
 @keyframes slide-up {
@@ -25,8 +24,8 @@ if (typeof document !== 'undefined') {
 
 export type ModalComponentProps = {
     children: React.ReactNode,
-    open: boolean | undefined,
-    setOpen: (open: boolean) => void | undefined
+    open: boolean,
+    setOpen: (open: boolean) => void
 }
 
 let modalCount = 0
@@ -35,9 +34,7 @@ export default function ModalComponent(props: ModalComponentProps) {
     const zIndex = useRef(1000 + modalCount++).current;
     const id = useRef(`modal-${zIndex}`).current;
 
-    const [open, setOpen] = useSynced(true, props.open, props.setOpen)
-
-    if (!open) return null;
+    if (!props.open) return null;
 
     return (
         <div
@@ -57,7 +54,7 @@ export default function ModalComponent(props: ModalComponentProps) {
                 width: '100vw',
                 zIndex: zIndex
             }}
-            onClick={() => setOpen(false)}
+            onClick={() => props.setOpen(false)}
         >
             <div
                 style={{ maxWidth: '100%', animation: 'slide-up 0.3s ease-out' }}
