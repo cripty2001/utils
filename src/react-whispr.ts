@@ -2,7 +2,7 @@ import { Whispr } from "@cripty2001/whispr";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
-import { CURRENT_TS_MS } from ".";
+import { CURRENT_TS_MS, getRandomId } from ".";
 import { Dispatcher } from "./Dispatcher";
 import { SearcherData, useSearcher_w } from "./Searcher";
 
@@ -164,7 +164,7 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
  * Wraps an async function into a reactable data.
  * 
  * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive
- * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem.
+ * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem. If null, this function will act like an useEffect with an empty dependency array.
  * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed
  * @returns  The dispatcher
  * 
@@ -177,10 +177,12 @@ export function useAsync<I, O>(
     debouce: number = 200
 ): Dispatcher<I, O> {
     // Initing reactive input
-    const [input, setInput] = useRef(Whispr.create(data)).current;
-    useEffect(() => {
-        setInput(data); // Debouncing already handled by dispatcher
-    }, [data, setInput]);
+    const [input, setInput] = useRef(Whispr.create(data ?? getRandomId() as I)).current;
+    if (data !== null) {
+        useEffect(() => {
+            setInput(data); // Debouncing already handled by dispatcher
+        }, [data, setInput]);
+    }
 
     // Initing dispatcher
     const dispatcher: Dispatcher<I, O> = useRef(
