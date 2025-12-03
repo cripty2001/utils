@@ -31,7 +31,10 @@ export function useSearcher_w<T>(data: Whispr<SearcherData<T>[]>, query: Whispr<
     let unsubscribe_q: () => void = () => { }
     let unsubscribe_d: () => void = () => { }
 
-    const [toReturn, setToReturn] = Whispr.create<SearcherData<T>[]>([], () => unsubscribe())
+    const [toReturn, setToReturn] = Whispr.create<SearcherData<T>[]>([], () => {
+        unsubscribe_q();
+        unsubscribe_d();
+    })
 
     unsubscribe_q = query.subscribe((q) => {
         let result = searcher.search(q);
