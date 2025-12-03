@@ -201,22 +201,24 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     const currTs = useCurrentTimestamp(refresh);
     const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
 
+    const getFormat = (seconds: number) => {
+        if (seconds < 60) return "second";
+        if (seconds < 3600) return "minute";
+        if (seconds < 86400) return "hour";
+        if (seconds < 604800) return "day";
+        return "week";
+    }
+
     const cb = useCallback((ts: Date | number): string => {
         const now = currTs;
         const then = ts instanceof Date ? ts.getTime() : ts;
         const delta = then - now;
         const seconds = Math.round(delta / 1000);
 
-        const format = (() => {
-            if (seconds < 60) return "second";
-            if (seconds < 3600) return "minute";
-            if (seconds < 86400) return "hour";
-            if (seconds < 604800) return "day";
-            if (seconds < 2592000) return "week";
-            if (seconds < 31536000) return "month";
-            return "year";
-        })();
-        return rtf.format(seconds, format);
+        return rtf.format(
+            seconds,
+            getFormat(seconds)
+        );
     }, [currTs, rtf]);
 
     return cb;
