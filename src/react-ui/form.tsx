@@ -46,18 +46,24 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                     ...prev,
                     [input.key]: v
                 }))
+
+                const baseProps = {
+                    label: input.label,
+                    value: value,
+                    setValue: setValue,
+                    variant: "default" as keyof typeof variants,
+                    variants: variants,
+                    key: index,
+                    required: input.required,
+                    icon: input.icon,
+                }
                 switch (input.type) {
                     case "text":
                     case "email":
                     case "password":
                     case "tel":
                         return <InputComponent
-                            label={input.label}
-                            value={value}
-                            setValue={setValue}
-                            variant="default"
-                            variants={variants}
-                            key={index}
+                            {...baseProps}
                         >
                             {({ value, setValue, className }) => (
                                 <input
@@ -72,12 +78,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                         </InputComponent>
                     case "select":
                         return <InputComponent
-                            label={input.label}
-                            value={value}
-                            setValue={setValue}
-                            variant="default"
-                            variants={variants}
-                            key={index}
+                            {...baseProps}
                             required={input.required}
                             validate={(v) => {
                                 if (!input.options.includes(v))
