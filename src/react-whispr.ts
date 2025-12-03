@@ -214,13 +214,14 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
 
 /**
  * React shorthand for the Searcher
- * @param data The data to search on (static, the hook must be re-called if those data changes)
- * @param q The query to search for (dynamic, can be updated to have the returned results updated)
+ * @param data The data to search on 
+ * @param q The query to search for 
  * @return The filtered data
  * 
  */
 export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData<T>[] {
     const q_w = useWhispr(q)
-    const searcher = useSearcher_w(data, q_w)
+    const data_w = useWhispr(data)
+    const searcher = useSearcher_w(data_w, q_w)
     return useWhisprValue(searcher)
 }

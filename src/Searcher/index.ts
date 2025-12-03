@@ -20,17 +20,26 @@ export class Searcher<T> {
             ))
         )
     }
+
+    public updateData(data: SearcherData<T>[]) {
+        this.data = data
+    }
 }
 
-export function useSearcher_w<T>(data: SearcherData<T>[], query: Whispr<string>): Whispr<SearcherData<T>[]> {
-    const searcher = new Searcher<T>(data);
-    let unsubscribe: () => void = () => { }
+export function useSearcher_w<T>(data: Whispr<SearcherData<T>[]>, query: Whispr<string>): Whispr<SearcherData<T>[]> {
+    const searcher = new Searcher<T>(data.value);
+    let unsubscribe_q: () => void = () => { }
+    let unsubscribe_d: () => void = () => { }
 
     const [toReturn, setToReturn] = Whispr.create<SearcherData<T>[]>([], () => unsubscribe())
 
-    unsubscribe = query.subscribe((q) => {
+    unsubscribe_q = query.subscribe((q) => {
         let result = searcher.search(q);
         setToReturn(result);
+    }, true)
+
+    unsubscribe_d = data.subscribe((d) => {
+        searcher.updateData(d);
     }, true)
 
     return toReturn
