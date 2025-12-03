@@ -46,7 +46,6 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
                 }
             </div>
             <div style={{ position: 'relative' }} className={baseClassName.wrapper}>
-                !!! {baseClassName.wrapper}!!!
                 {props.icon &&
                     <div style={{ position: 'absolute', left: '0.5rem', top: '0.5rem' }}>
                         {props.icon}
