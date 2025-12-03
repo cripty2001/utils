@@ -1,12 +1,14 @@
+import { LucideIcon } from "lucide-react"
 import { useMemo } from "react"
 import { TypeofRecord } from ".."
 import Button from "./button"
 import InputComponent, { InputComponentPropsVariants } from "./input"
 
 export type FormComponentPropsInput = {
-    label: string,
+    label?: string,
     required: boolean,
-    key: string
+    key: string,
+    icon?: React.ReactElement<LucideIcon>
 } & (
         {
             type: "text" | "email" | "password" | "tel",
