@@ -12,6 +12,8 @@ export class Searcher<T> {
     }
 
     public search(query: string): SearcherData<T>[] {
+        if (query === "") return this.data
+
         return this.data.filter(item =>
             item.queries.some(q => q.includes(
                 query.toLowerCase()
