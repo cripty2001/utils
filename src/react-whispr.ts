@@ -201,13 +201,25 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     const currTs = useCurrentTimestamp(refresh);
     const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
 
-    const getFormat = (_seconds: number) => {
-        const seconds = Math.abs(_seconds);
-        if (seconds < 60) return "second";
-        if (seconds < 3600) return "minute";
-        if (seconds < 86400) return "hour";
-        if (seconds < 604800) return "day";
-        return "week";
+    const getFormat = (diff: number) => {
+        const breakpoints = [
+            { limit: 60, unit: "second" },
+            { limit: 3600, unit: "minute" },
+            { limit: 86400, unit: "hour" },
+            { limit: 604800, unit: "day" },
+        ] as const;
+
+        for (const { limit, unit } of breakpoints) {
+            if (diff < limit) return {
+                limit,
+                unit
+            };
+        }
+
+        return {
+            limit: 2592000,
+            unit: "week"
+        };
     }
 
     const cb = useCallback((ts: Date | number): string => {
@@ -216,9 +228,12 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
         const delta = then - now;
         const seconds = Math.round(delta / 1000);
 
+
+        const { limit, unit } = getFormat(seconds);
+
         return rtf.format(
-            seconds,
-            getFormat(seconds)
+            Math.floor(seconds / limit),
+            unit as Intl.RelativeTimeFormatUnit
         );
     }, [currTs, rtf]);
 
