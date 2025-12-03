@@ -201,7 +201,8 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     const currTs = useCurrentTimestamp(refresh);
     const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
 
-    const getFormat = (diff: number) => {
+    const getFormat = (_diff: number) => {
+        const diff = Math.abs(_diff);
         const breakpoints = [
             { limit: 60, unit: "second" },
             { limit: 3600, unit: "minute" },
@@ -230,9 +231,12 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
 
         const { limit, unit } = getFormat(seconds);
 
-        console.log("format", Math.floor(seconds / limit), unit);
+        const rounded = seconds > 0 ?
+            Math.floor(seconds / limit) :
+            Math.ceil(seconds / limit);
+
         return rtf.format(
-            Math.floor(seconds / limit),
+            rounded,
             unit as Intl.RelativeTimeFormatUnit
         );
     }, [currTs, rtf]);
