@@ -202,6 +202,7 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
 
     const getFormat = (seconds: number) => {
+        console.log("getformat", seconds);
         if (seconds < 60) return "second";
         if (seconds < 3600) return "minute";
         if (seconds < 86400) return "hour";
