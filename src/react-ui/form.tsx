@@ -53,7 +53,6 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                     setValue: setValue,
                     variant: "default" as keyof typeof variants,
                     variants: variants,
-                    key: index,
                     required: input.required,
                     icon: input.icon,
                 }
@@ -64,6 +63,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                     case "tel":
                         return <InputComponent
                             {...baseProps}
+                            key={index}
                         >
                             {({ value, setValue, className }) => (
                                 <input
@@ -79,6 +79,7 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                     case "select":
                         return <InputComponent
                             {...baseProps}
+                            key={index}
                             required={input.required}
                             validate={(v) => {
                                 if (!input.options.includes(v))
