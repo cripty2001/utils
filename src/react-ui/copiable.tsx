@@ -1,6 +1,6 @@
-import { copyToClipboard } from "@cripty2001/utils";
 import { CheckCircle2, CopyIcon } from "lucide-react";
 import { useCallback, useState } from "react";
+import { copyToClipboard } from "../";
 
 export type CopiableProps = {
     value: string;
