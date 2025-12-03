@@ -206,7 +206,17 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
         const then = ts instanceof Date ? ts.getTime() : ts;
         const delta = then - now;
         const seconds = Math.round(delta / 1000);
-        return rtf.format(seconds, "second");
+
+        const format = (() => {
+            if (seconds < 60) return "second";
+            if (seconds < 3600) return "minute";
+            if (seconds < 86400) return "hour";
+            if (seconds < 604800) return "day";
+            if (seconds < 2592000) return "week";
+            if (seconds < 31536000) return "month";
+            return "year";
+        })();
+        return rtf.format(seconds, format);
     }, [currTs, rtf]);
 
     return cb;
