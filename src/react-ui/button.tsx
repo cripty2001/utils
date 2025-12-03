@@ -1,13 +1,14 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 export type ButtonProps = {
     title: string,
+    icon?: React.ReactElement<LucideIcon>,
     onClick: () => void | Promise<void>
     className?: string
 }
 
-export default function Button({ title, onClick, className }: ButtonProps) {
+export default function Button({ title, onClick, className, icon }: ButtonProps) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const handleClick = async () => {
@@ -36,11 +37,17 @@ export default function Button({ title, onClick, className }: ButtonProps) {
                     cursor: 'pointer',
                 }}
             >
-                {loading ? <Loader2 style={{
-                    width: '1rem',
-                    height: '1rem',
-                    animation: 'spin 1s linear infinite',
-                }} /> : <div>{title}</div>}
+                {loading ?
+                    <Loader2 style={{
+                        width: '1rem',
+                        height: '1rem',
+                        animation: 'spin 1s linear infinite',
+                    }} /> :
+                    <div className="flex flex-row gap-4 items-center justify-center">
+                        {icon}
+                        {title}
+                    </div>
+                }
             </div>
             {error && <div style={{
                 color: '#ef4444'
