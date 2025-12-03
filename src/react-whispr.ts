@@ -204,21 +204,37 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
     const getFormat = (_diff: number) => {
         const diff = Math.abs(_diff);
         const breakpoints = [
-            { limit: 60, unit: "second" },
-            { limit: 3600, unit: "minute" },
-            { limit: 86400, unit: "hour" },
-            { limit: 604800, unit: "day" },
+            {
+                base: 1,
+                limit: 60,
+                unit: "second"
+            },
+            {
+                base: 60,
+                limit: 60,
+                unit: "minute"
+            },
+            {
+                base: 60 * 60,
+                limit: 24,
+                unit: "hour"
+            },
+            {
+                base: 60 * 60 * 24,
+                limit: 45,
+                unit: "day"
+            },
         ] as const;
 
-        for (const { limit, unit } of breakpoints) {
-            if (diff < limit) return {
-                limit,
+        for (const { base, limit, unit } of breakpoints) {
+            if (diff < limit * base) return {
+                base,
                 unit
             };
         }
 
         return {
-            limit: 2592000,
+            base: 60 * 60 * 24 * 7,
             unit: "week"
         };
     }
@@ -229,11 +245,11 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
         const delta = then - now;
         const seconds = Math.round(delta / 1000);
 
-        const { limit, unit } = getFormat(seconds);
+        const { base, unit } = getFormat(seconds);
 
         const rounded = seconds > 0 ?
-            Math.floor(seconds / limit) :
-            Math.ceil(seconds / limit);
+            Math.floor(seconds / base) :
+            Math.ceil(seconds / base);
 
         return rtf.format(
             rounded,
