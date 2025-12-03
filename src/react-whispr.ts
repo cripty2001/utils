@@ -228,9 +228,9 @@ export function useRelTime(refresh: number = 1000): (ts: Date | number) => strin
         const delta = then - now;
         const seconds = Math.round(delta / 1000);
 
-
         const { limit, unit } = getFormat(seconds);
 
+        console.log("format", Math.floor(seconds / limit), unit);
         return rtf.format(
             Math.floor(seconds / limit),
             unit as Intl.RelativeTimeFormatUnit
