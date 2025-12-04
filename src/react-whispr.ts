@@ -87,7 +87,7 @@ export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void): void {
  * @returns The current timestamp
  */
 export function useCurrentTimestamp(refresh: number = 1000): number {
-    return useWhisprValue(CURRENT_TS_MS);
+    return useWhisprValue(CURRENT_TS_MS());
 }
 
 /**
