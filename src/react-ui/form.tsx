@@ -27,7 +27,7 @@ export type FormComponentProps<T extends Record<string, string>> = {
         callback: (values: T) => void | Promise<void>
     }
     value: T,
-    setValue: React.Dispatch<React.SetStateAction<T>>
+    setValue: (v: T) => void
     variant: TypeofRecord<InputComponentPropsVariants> & {
         button: string
     }
@@ -42,10 +42,10 @@ export default function FormComponent<T extends Record<string, string>>(props: F
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {props.inputs.map((input, index) => (() => {
                 const value = props.value[input.key]
-                const setValue = (v: string) => props.setValue(prev => ({
-                    ...prev,
+                const setValue = (v: string) => props.setValue({
+                    ...props.value,
                     [input.key]: v
-                }))
+                })
 
                 const baseProps = {
                     label: input.label,
