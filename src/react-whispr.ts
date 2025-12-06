@@ -280,3 +280,20 @@ export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData
     const searcher = useSearcher_w(data_w, q_w)
     return useWhisprValue(searcher)
 }
+
+/**
+ * A react ref hook with safe laxy initialization, ready for safe effects.
+ * @remarks The initialization function will only be called once, and the result will be stored in the ref.
+ * @param value The value to initialize the ref with. If a function is provided, it will be called to initialize the ref.
+ * @returns 
+ */
+export function useSafeRef<T>(value: (() => T)): T {
+    const ref = useRef<T | null>(null);
+
+    useEffect(() => {
+        if (ref.current !== null) return;
+        ref.current = value();
+    }, []);
+
+    return ref.current as T;
+}
