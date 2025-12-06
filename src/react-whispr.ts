@@ -1,4 +1,4 @@
-import { Whispr, WhisprSetter } from "@cripty2001/whispr";
+import { Whispr } from "@cripty2001/whispr";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
@@ -177,12 +177,7 @@ export function useAsync<I, O>(
     debouce: number = 200
 ): Dispatcher<I, O> {
     // Initing reactive input
-    const whisprRef = useRef<[Whispr<I>, WhisprSetter<I>] | null>(null);
-    if (!whisprRef.current) {
-        whisprRef.current = Whispr.create(data ?? getRandomId() as I);
-    }
-    const [input, setInput] = whisprRef.current;
-
+    const [input, setInput] = useSafeRef(() => Whispr.create(data ?? getRandomId() as I));
     if (data !== null) {
         useEffect(() => {
             setInput(data); // Debouncing already handled by dispatcher
@@ -190,12 +185,12 @@ export function useAsync<I, O>(
     }
 
     // Initing dispatcher
-    const dispatcher: Dispatcher<I, O> = useRef(
+    const dispatcher: Dispatcher<I, O> = useSafeRef(() =>
         new Dispatcher<I, O>(input, f, debouce)
-    ).current;
+    );
 
     // Returning dispatcher
-    return dispatcher
+    return dispatcher;
 }
 
 /**
