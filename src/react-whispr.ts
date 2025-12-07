@@ -277,7 +277,7 @@ export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData
 }
 
 /**
- * A react ref hook with safe laxy initialization, ready for safe effects.
+ * A react ref hook with safe lazy initialization, ready for safe side effects.
  * @remarks The initialization function will only be called once, and the result will be stored in the ref.
  * @param value The value to initialize the ref with. If a function is provided, it will be called to initialize the ref.
  * @returns 
@@ -285,10 +285,9 @@ export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData
 export function useSafeRef<T>(value: (() => T)): T {
     const ref = useRef<T | null>(null);
 
-    useEffect(() => {
-        if (ref.current !== null) return;
+    if (ref.current === null) {
         ref.current = value();
-    }, []);
+    }
 
-    return ref.current as T;
+    return ref.current;
 }
