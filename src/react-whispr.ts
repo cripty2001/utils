@@ -160,16 +160,34 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
 }
 
 /**
+ * Wraps an async function into a reactable data structure that tracks loading state, progress, and results.
  * 
- * Wraps an async function into a reactable data.
+ * **Error Handling:** This function does NOT throw errors. Instead, errors are stored in the returned dispatcher's state.
+ * Check the dispatcher's `data` property to access the error state. The dispatcher's promise resolves successfully
+ * even when errors occur - errors are captured and stored in the reactive state for UI consumption.
  * 
- * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive
+ * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive.
  * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem. If null, this function will act like an useEffect with an empty dependency array.
- * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed
- * @returns  The dispatcher
+ * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed.
+ * @returns A Dispatcher object containing:
+ *   - `data`: A Whispr<DispatcherStatePayload<O>> that contains the loading state, progress, and either the result data or error
+ *   - `filtered`: A Whispr<O | null> that contains the result data when successful, or null when loading or on error
  * 
  * @type I Input for the async function.
- * @type O Output for the async function
+ * @type O Output for the async function.
+ * 
+ * @example
+ * const dispatcher = useAsync(async (userId) => {
+ *   const response = await fetch(`/api/users/${userId}`);
+ *   return response.json();
+ * }, userId);
+ * 
+ * const state = useWhisprValue(dispatcher.data);
+ * // state can be: { loading: true, progress: 0 } | { loading: false, ok: true, data: T } | { loading: false, ok: false, error: Error }
+ * 
+ * if (!state.loading && !state.ok) {
+ *   console.error('Error:', state.error);
+ * }
  */
 export function useAsync<I, O>(
     f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
@@ -191,6 +209,43 @@ export function useAsync<I, O>(
 
     // Returning dispatcher
     return dispatcher;
+}
+
+/**
+ * Async version of useEffect with debouncing. Executes an async function as a side effect when data changes.
+ * 
+ * **Error Handling:** This function THROWS errors. Unlike `useAsync`, errors are not stored in state but are thrown
+ * as promise rejections. Use this when you want errors to propagate (e.g., to error boundaries or try/catch blocks).
+ * 
+ * @param f The async function to execute. It should return a promise. It is not reactive.
+ * @param data The data that triggers the effect. It must be stable, as anything in the dependency array of useEffect.
+ *   If null, this function will act like useEffect with an empty dependency array.
+ * @param debounce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not
+ *   passed since the last data change. If another change happens during the wait, the first function call is aborted.
+ * 
+ * @remarks This function returns void - it is purely for side effects, similar to useEffect.
+ * @remarks Errors thrown by the async function will cause the promise to reject. If you need to handle errors
+ *   in the UI without throwing, use `useAsync` instead.
+ * 
+ * @example
+ * useAsyncEffect(async (userId, setProgress, signal) => {
+ *   const response = await fetch(`/api/users/${userId}`, { signal });
+ *   if (!response.ok) throw new Error('Failed to fetch');
+ *   const data = await response.json();
+ *   // Do something with data
+ * }, userId, 300);
+ */
+export function useAsyncEffect<I>(
+    f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<void>,
+    data: I,
+    debounce: number = 200
+): void {
+    const dispatcher = useAsync(f, data, debounce);
+    useOnWhispr(dispatcher.data, (data) => {
+        if (!data.loading && !data.ok) {
+            throw data.error;
+        }
+    });
 }
 
 /**
