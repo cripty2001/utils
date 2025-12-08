@@ -74,10 +74,11 @@ export function useWhispr<T>(data: T | Whispr<T>): Whispr<T> {
  * Subscribe a callback to a Whispr inside a react component, properly handling unsubscription on unmount.
  * @param w The whispr to subscribe to
  * @param cb The callback to call on value change
+ * @param unsafe If true, the callback will be allowed to throw errors, that will then bubble up
  */
-export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void): void {
+export function useOnWhispr<T>(w: Whispr<T>, unsafe: boolean = false, cb: (value: T) => void,): void {
     useEffect(() => {
-        const unsub = w.subscribe(cb);
+        const unsub = w.subscribe(cb, undefined, unsafe);
         return () => unsub();
     }, [w, cb]);
 }
@@ -241,7 +242,7 @@ export function useAsyncEffect<I>(
     debounce: number = 200
 ): void {
     const dispatcher = useAsync(f, data, debounce);
-    useOnWhispr(dispatcher.data, (data) => {
+    useOnWhispr(dispatcher.data, true, (data) => {
         if (!data.loading && !data.ok) {
             throw data.error;
         }
