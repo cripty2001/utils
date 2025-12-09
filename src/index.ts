@@ -232,10 +232,10 @@ export function getEnv(key: string, defaultValue?: string): string {
 }
 
 const [currentTsMs, setCurrentTsMs] = Whispr.create<number>(Date.now());
-const currentTsMsInterval: NodeJS.Timeout | null = null;
+let currentTsMsInterval: NodeJS.Timeout | null = null;
 export const CURRENT_TS_MS = () => {
     if (currentTsMsInterval === null) {
-        setInterval(() => {
+        currentTsMsInterval = setInterval(() => {
             setCurrentTsMs(Date.now());
         }, 200);
     }
