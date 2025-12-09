@@ -21,21 +21,22 @@ if (typeof document !== 'undefined') {
 
 export type LoaderProps<T extends AppserverData> = {
     data: Dispatcher<unknown, T>
-    children: (data: T) => React.ReactNode
+    children: React.ComponentType<{ data: T }>
 }
 
 export default function Loader<T extends AppserverData>(props: LoaderProps<T>) {
     const data = useWhisprValue(props.data.data);
+
     return (
         <div>
-            <Content data={data} >{(data) =>
-                props.children(data)
-            }</Content>
+            <Content data={data} children={props.children} />
         </div>
     )
 }
 
-function Content<T extends AppserverData>({ data, children }: { data: DispatcherStatePayload<T>, children: (data: T) => React.ReactNode }) {
+function Content<T extends AppserverData>({ data, children }: { data: DispatcherStatePayload<T>, children: React.ComponentType<{ data: T }> }) {
+    const ChildComponent = children;
+
     if (data.loading)
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -52,5 +53,5 @@ function Content<T extends AppserverData>({ data, children }: { data: Dispatcher
     if (!data.ok)
         return <div style={{ color: '#ef4444' }}>{data.error.message}</div>
 
-    return children(data.data)
+    return <ChildComponent data={data.data} />
 }
