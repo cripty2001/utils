@@ -251,12 +251,10 @@ export function useAsyncEffect<I>(
 
 /**
  * Format a timestamp into a relative time string (e.g. "5 minutes ago", "in 2 hours"), using the browser locale.
- * The refreshed time is reactive.
- * @param refresh The refresh interval, in milliseconds. Default to 1000ms.
  * @returns A callback (reactive, will change on refresh) that formats a given timestamp into a relative time string.
  */
-export function useRelTime(refresh: number = 1000): (ts: Date | number) => string {
-    const currTs = useCurrentTimestamp(refresh);
+export function useRelTime(): (ts: Date | number) => string {
+    const currTs = useCurrentTimestamp(1000);
     const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
 
     const getFormat = (_diff: number) => {
