@@ -197,11 +197,12 @@ export function useAsync<I, O>(
 ): Dispatcher<I, O> {
     // Initing reactive input
     const [input, setInput] = useSafeRef(() => Whispr.create(data ?? getRandomId() as I));
-    if (data !== null) {
-        useEffect(() => {
+
+    useEffect(() => {
+        if (data !== null) {
             setInput(data); // Debouncing already handled by dispatcher
-        }, [data, setInput]);
-    }
+        }
+    }, [data, setInput]);
 
     // Initing dispatcher
     const dispatcher: Dispatcher<I, O> = useSafeRef(() =>
