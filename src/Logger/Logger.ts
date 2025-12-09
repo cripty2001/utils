@@ -1,7 +1,7 @@
 import { Whispr } from "@cripty2001/whispr";
 import { getRandomId } from "..";
 
-type LoggerItem = {
+export type LoggerItem = {
     id: string,
     date: Date,
     message: string,
