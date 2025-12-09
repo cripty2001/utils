@@ -34,22 +34,13 @@ export function useWhisprValue<I, O = I>(
     ).current;
 
     const [value, setValue] = useState(value_w.value);
-    const valueRef = useRef(value);
 
-    useEffect(() => {
-        valueRef.current = value;
-    }, [value]);
+    value_w.subscribe((newValue) => {
+        if (isEqual(newValue, value))
+            return;
 
-    useEffect(() => {
-        const unsub = value_w.subscribe((newValue) => {
-            if (isEqual(newValue, valueRef.current))
-                return;
-
-            setValue(newValue);
-        }, false);
-
-        return () => unsub();
-    }, [value_w]);
+        setValue(newValue);
+    }, false);  // Already got the initial value, and this will call syncronously generate a react warning as called on an not yet mounted component
 
     return value;
 }
@@ -260,69 +251,70 @@ export function useAsyncEffect<I>(
 
 /**
  * Format a timestamp into a relative time string (e.g. "5 minutes ago", "in 2 hours"), using the browser locale.
- * @returns A callback (reactive, will change on refresh) that formats a given timestamp into a relative time string.
+ * 
+ * @param data The data to format. Reactive
+ * @returns The formatted timestamp
  */
-export function useRelTime(): (ts: Date | number) => string {
-    const currTs = useCurrentTimestamp(1000);
-    const rtf = useRef(new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })).current;
+export function useRelTime(_data: number | Date): string {
+    const rtf = new Intl.RelativeTimeFormat(navigator.language, { numeric: "auto" })
+    const data = useWhispr(_data);
 
-    const getFormat = (_diff: number) => {
-        const diff = Math.abs(_diff);
-        const breakpoints = [
-            {
-                base: 1,
-                limit: 60,
-                unit: "second"
-            },
-            {
-                base: 60,
-                limit: 60,
-                unit: "minute"
-            },
-            {
-                base: 60 * 60,
-                limit: 24,
-                unit: "hour"
-            },
-            {
-                base: 60 * 60 * 24,
-                limit: 45,
-                unit: "day"
-            },
-        ] as const;
+    const toReturn = useSafeRef(() =>
+        Whispr.from({ data, curr: CURRENT_TS_MS() }, ({ data, curr }) => {
+            const then = data instanceof Date ? data.getTime() : data;
+            const seconds = Math.round(then - curr) / 1000;
+            const { base, unit } = useRelTimeFormat(seconds);
 
-        for (const { base, limit, unit } of breakpoints) {
-            if (diff < limit * base) return {
-                base,
-                unit
-            };
-        }
+            const rounded = seconds > 0 ?
+                Math.floor(seconds / base) :
+                Math.ceil(seconds / base);
 
-        return {
-            base: 60 * 60 * 24 * 7,
-            unit: "week"
+            return rtf.format(
+                rounded,
+                unit as Intl.RelativeTimeFormatUnit
+            );
+        })
+    );
+
+    return useWhisprValue(toReturn);
+}
+
+function useRelTimeFormat(_diff: number): { base: number, unit: string } {
+    const diff = Math.abs(_diff);
+    const breakpoints = [
+        {
+            base: 1,
+            limit: 60,
+            unit: "second"
+        },
+        {
+            base: 60,
+            limit: 60,
+            unit: "minute"
+        },
+        {
+            base: 60 * 60,
+            limit: 24,
+            unit: "hour"
+        },
+        {
+            base: 60 * 60 * 24,
+            limit: 45,
+            unit: "day"
+        },
+    ] as const;
+
+    for (const { base, limit, unit } of breakpoints) {
+        if (diff < limit * base) return {
+            base,
+            unit
         };
     }
 
-    const cb = useCallback((ts: Date | number): string => {
-        const now = currTs;
-        const then = ts instanceof Date ? ts.getTime() : ts;
-        const delta = then - now;
-        const seconds = Math.round(delta / 1000);
-
-        const { base, unit } = getFormat(seconds);
-
-        const rounded = seconds > 0 ?
-            Math.floor(seconds / base) :
-            Math.ceil(seconds / base);
-
-        return rtf.format(
-            rounded,
-            unit as Intl.RelativeTimeFormatUnit
-        );
-    }, [currTs, rtf]);
-
-    return cb;
+    return {
+        base: 60 * 60 * 24 * 7,
+        unit: "week"
+    };
 }
 
 /**
