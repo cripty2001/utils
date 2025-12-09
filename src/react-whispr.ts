@@ -264,7 +264,7 @@ export function useRelTime(_data: number | Date): string {
         Whispr.from({ data, curr: CURRENT_TS_MS() }, ({ data, curr }) => {
             const then = data instanceof Date ? data.getTime() : data;
             const seconds = Math.round(then - curr) / 1000;
-            const { base, unit } = useRelTimeFormat(seconds);
+            const { base, unit } = getRelTimeFormat(seconds);
 
             const rounded = seconds > 0 ?
                 Math.floor(seconds / base) :
@@ -280,7 +280,7 @@ export function useRelTime(_data: number | Date): string {
     return useWhisprValue(toReturn);
 }
 
-function useRelTimeFormat(_diff: number): { base: number, unit: string } {
+function getRelTimeFormat(_diff: number): { base: number, unit: string } {
     const diff = Math.abs(_diff);
     const breakpoints = [
         {
