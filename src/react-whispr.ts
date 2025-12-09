@@ -34,13 +34,22 @@ export function useWhisprValue<I, O = I>(
     ).current;
 
     const [value, setValue] = useState(value_w.value);
+    const valueRef = useRef(value);
 
-    value_w.subscribe((newValue) => {
-        if (isEqual(newValue, value))
-            return;
+    useEffect(() => {
+        valueRef.current = value;
+    }, [value]);
 
-        setValue(newValue);
-    }, false);  // Already got the initial value, and this will call syncronously generate a react warning as called on an not yet mounted component
+    useEffect(() => {
+        const unsub = value_w.subscribe((newValue) => {
+            if (isEqual(newValue, valueRef.current))
+                return;
+
+            setValue(newValue);
+        }, false);
+
+        return () => unsub();
+    }, [value_w]);
 
     return value;
 }
