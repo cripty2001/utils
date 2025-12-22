@@ -1,5 +1,4 @@
 import type React from "react";
-import type { AppserverData } from "../Appserver/client";
 import type { Dispatcher, DispatcherStatePayload } from "../Dispatcher";
 import { useWhisprValue } from "../react-whispr";
 
@@ -19,12 +18,12 @@ if (typeof document !== 'undefined') {
     }
 }
 
-export type LoaderProps<T extends AppserverData> = {
+export type LoaderProps<T> = {
     data: Dispatcher<unknown, T>
     children: React.ComponentType<{ data: T }>
 }
 
-export default function Loader<T extends AppserverData>(props: LoaderProps<T>) {
+export default function Loader<T>(props: LoaderProps<T>) {
     const data = useWhisprValue(props.data.data);
 
     return (
@@ -34,7 +33,7 @@ export default function Loader<T extends AppserverData>(props: LoaderProps<T>) {
     )
 }
 
-function Content<T extends AppserverData>({ data, children }: { data: DispatcherStatePayload<T>, children: React.ComponentType<{ data: T }> }) {
+function Content<T>({ data, children }: { data: DispatcherStatePayload<T>, children: React.ComponentType<{ data: T }> }) {
     const ChildComponent = children;
 
     if (data.loading)
