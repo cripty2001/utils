@@ -26,29 +26,31 @@ export default function Button({ onClick, children, className }: ButtonProps) {
     }
     return (
         <>
-            <div
-                onClick={handleClick}
-                className={className}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                }}
-            >
-                {loading ?
-                    <Loader2 style={{
-                        width: '1rem',
-                        height: '1rem',
-                        animation: 'spin 1s linear infinite',
-                    }} /> :
-                    children
-                }
+            <div className="flex flex-col gap-2">
+                <div
+                    onClick={handleClick}
+                    className={className}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {loading ?
+                        <Loader2 style={{
+                            width: '1rem',
+                            height: '1rem',
+                            animation: 'spin 1s linear infinite',
+                        }} /> :
+                        children
+                    }
+                </div>
+                {error && <div style={{
+                    color: '#ef4444'
+                }}>{error}</div>}
             </div>
-            {error && <div style={{
-                color: '#ef4444'
-            }}>{error}</div>}
         </>
     )
 }
