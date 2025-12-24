@@ -26,7 +26,7 @@ export default function Button({ onClick, children, className }: ButtonProps) {
     }
     return (
         <>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col h-full w-full gap-2">
                 <div
                     onClick={handleClick}
                     className={className}
