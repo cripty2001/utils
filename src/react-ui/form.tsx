@@ -1,8 +1,8 @@
 import { LucideIcon } from "lucide-react"
 import { useMemo } from "react"
 import { TypeofRecord } from ".."
-import Button from "./button"
 import InputComponent, { InputComponentPropsVariants } from "./input"
+import TextButton from "./textButton"
 
 export type FormComponentPropsInput = {
     label?: string,
@@ -104,7 +104,11 @@ export default function FormComponent<T extends Record<string, string>>(props: F
                 }
             })())}
             {props.submit &&
-                <Button className={variants.default.button} title={props.submit.label} onClick={() => props.submit?.callback(props.value)} />
+                <TextButton
+                    className={variants.default.button}
+                    title={props.submit.label}
+                    onClick={() => props.submit?.callback(props.value)}
+                />
             }
         </div>
     )

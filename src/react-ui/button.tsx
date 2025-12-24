@@ -1,4 +1,4 @@
-import { Loader2, LucideIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 
@@ -8,7 +8,7 @@ export type ButtonProps = {
     className?: string
 }
 
-export function Button({ onClick, children, className }: ButtonProps) {
+export default function Button({ onClick, children, className }: ButtonProps) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const handleClick = async () => {
@@ -50,21 +50,5 @@ export function Button({ onClick, children, className }: ButtonProps) {
                 color: '#ef4444'
             }}>{error}</div>}
         </>
-    )
-}
-
-export type TextButtonProps = Omit<ButtonProps, 'children'> & {
-    title: string,
-    icon?: React.ReactElement<LucideIcon>
-}
-
-export function TextButton({ title, onClick, className, icon }: TextButtonProps) {
-    return (
-        <Button onClick={onClick} className={className}>
-            <div className="flex flex-row gap-4 items-center justify-center">
-                {icon}
-                {title}
-            </div>
-        </Button>
     )
 }
