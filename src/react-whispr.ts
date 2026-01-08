@@ -84,10 +84,10 @@ export function useOnWhispr<T>(w: Whispr<T>, unsafe: boolean = false, cb: (value
 }
 
 /**
- * Return a reactive current timestamp (ms), updated at the given interval.
+ * Return a reactive current timestamp (ms)
  * @returns The current timestamp
  */
-export function useCurrentTimestamp(refresh: number = 1000): number {
+export function useCurrentTimestamp(): number {
     return useWhisprValue(CURRENT_TS_MS());
 }
 
