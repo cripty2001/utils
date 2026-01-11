@@ -21,6 +21,7 @@ if (typeof document !== 'undefined') {
 export type LoaderProps<T> = {
     data: Dispatcher<unknown, T>
     children: React.ComponentType<{ data: T }>
+    loader?: React.ReactNode
 }
 
 export default function Loader<T>(props: LoaderProps<T>) {
@@ -28,16 +29,20 @@ export default function Loader<T>(props: LoaderProps<T>) {
 
     return (
         <div>
-            <Content data={data} children={props.children} />
+            <Content data={data} children={props.children} loader={props.loader} />
         </div>
     )
 }
 
-function Content<T>({ data, children }: { data: DispatcherStatePayload<T>, children: React.ComponentType<{ data: T }> }) {
+function Content<T>({ data, children, loader }: {
+    data: DispatcherStatePayload<T>,
+    children: React.ComponentType<{ data: T }>,
+    loader?: React.ReactNode
+}) {
     const ChildComponent = children;
 
     if (data.loading)
-        return (
+        return loader ?? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
                 <div style={{
                     animation: 'spin 1s linear infinite',
