@@ -125,7 +125,7 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
         (value !== undefined && setValue === undefined) ||
         (value === undefined && setValue !== undefined)
     )
-        throw new Error('Either value and setValue must be provided, or both must be undefined');
+        throw new Error('Either both value and setValue must be provided, or both must be undefined');
 
     const setValueRef = useRef(setValue);
     useEffect(() => {
@@ -346,4 +346,142 @@ export function useSafeRef<T>(value: (() => T)): T {
     }
 
     return ref.current;
+}
+
+export type AsyncInputValue<C extends Record<string, JSONEncodable>, R extends Record<string, JSONEncodable>> = R & {
+    _meta: {
+        ts: number;
+        config: C;
+    }
+}
+/**
+ * Creates a bidirectional async input handler that manages synchronous config updates
+ * and asynchronous result computation with automatic deduplication and conflict resolution.
+ * 
+ * This hook acts as a "gateway" between controlled input components and expensive async
+ * operations (like autocomplete, search, or validation). It maintains two separate concerns:
+ * 
+ * 1. **External state** (`value`/`setValue` params): Contains only valid, complete data.
+ *    Updates when async operations complete. Parent components see no debouncing/loading states.
+ * 
+ * 2. **Internal state** (returned `value`/`setValue`): Synchronously tracks user input/config.
+ *    Updates immediately on user interaction without waiting for async results.
+ * 
+ * The hook automatically:
+ * - Merges updates from both external (param) and internal (returned) setValue calls
+ * - Detects and discards stale async results
+ * - Handles concurrent updates gracefully with last-write-wins semantics
+ * 
+ * @template C - Configuration object type (the input/config that triggers async work)
+ * @template R - Result object type (the output of the async handler)
+ * 
+ * @param value - Current external value containing both result data and metadata with config/timestamp. Metadata should be considered opaque, and always carried araoud as they are
+ * @param setValue - Callback to update external value when async operations complete
+ * @param handler - Async function that computes results from config.
+ * 
+ * @returns Array containing:
+ *   - `value`: Current config (updates synchronously with user input)
+ *   - `setValue`: Function to update config (triggers new async operation)
+ *   - `result`: Latest computed result or null if no result yet. Useful for displaying loaders
+ * 
+ * @example
+ * ```tsx
+ * // Parent component manages complete, valid autocomplete selections
+ * const [selectedUser, setSelectedUser] = useState<AsyncInputValue<{query: string}, {id: string, name: string}>>(...)
+ * 
+ * function AutocompleteInput({selectedUser, setSelectedUser}) {
+ *   const [ value, setValue, result ] = useAsyncInput<{query: string}, {id: string, name: string}>(
+ *     selectedUser,
+ *     setSelectedUser,
+ *     async ({query}) => fetchUsers(query) // Debounced by useAsync
+ *   );
+ * 
+ *   return (
+ *     <input 
+ *       value={value.query}
+ *       onChange={e => setValue({query: e.target.value})} // Immediate update
+ *     />
+ *     {result === null ? <Spinner /> : <UserList users={result} />}
+ *   );
+ * }
+ * ```
+ * 
+ * @remarks
+ * The returned `result` will lag behind `value` during async processing. Consider showing a loader or some other similar indication
+ * Handler is NOT reactive. Conceptually it is a pure function that derives an async status from the value input, so there is no reason for it to be reactive, and this saves a lot heachaches with react reactivity loops.
+ */
+export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends Record<string, JSONEncodable>>(
+    value: AsyncInputValue<C, R>,
+    setValue: (value: AsyncInputValue<C, R>) => void,
+    handler: (config: C) => Promise<R>,
+): [
+        value: C,
+        setValue: (value: C) => void,
+        result: R | null
+    ] {
+    const [meta, setMeta] = useState<{
+        config: C;
+        ts: number;
+    }>({
+        config: value._meta.config,
+        ts: value._meta.ts
+    });
+
+    useEffect(() => {
+        if (value._meta.ts > meta.ts) {
+            setMeta(value._meta);
+        }
+    }, [value, meta, setMeta]);
+
+    // // React has always random problems with stale closures, expecially in async environment.
+    // // On the other side, the watched param of useAsync is always perfect
+    // // We aren't taking any risks, here
+    // type AsyncPack = {
+    //   c: C,
+    //   ts: number,
+    // }
+    // const asyncPack: AsyncPack = useMemo(() => {
+    //   return {
+    //     c: meta.config,
+    //     ts: meta.ts,
+    //   }
+    // }, [meta]);
+
+    const result_d = useAsync<{
+        config: C;
+        ts: number;
+    }, AsyncInputValue<C, R>>(
+        async ({ config, ts }) => {
+            console.log("useAsyncInput", { config, ts });
+            const r = await handler(config);
+            return {
+                ...r,
+                _meta: {
+                    ts: ts,
+                    config: config,
+                },
+            };
+        }, meta, 0);
+
+    const result = useWhisprValue(result_d.filtered);
+
+    useEffect(() => {
+        if (result === null)
+            return;
+
+        setValue(result);
+    }, [result, setValue]);
+
+    const returnedSetValue = useCallback((v: C) => {
+        setMeta({
+            config: v,
+            ts: Date.now(),
+        });
+    }, [setMeta]);
+
+    return [
+        meta.config,
+        returnedSetValue,
+        result,
+    ];
 }
