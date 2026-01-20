@@ -2,7 +2,7 @@ import { Whispr } from "@cripty2001/whispr";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
-import { CURRENT_TS_MS, getRandomId } from ".";
+import { CURRENT_TS_MS, getRandomId, JSONEncodable } from ".";
 import { Dispatcher } from "./Dispatcher";
 import { SearcherData, useSearcher_w } from "./Searcher";
 
