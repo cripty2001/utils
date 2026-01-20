@@ -452,7 +452,6 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         ts: number;
     }, AsyncInputValue<C, R>>(
         async ({ config, ts }) => {
-            console.log("useAsyncInput", { config, ts });
             const r = await handler(config);
             return {
                 ...r,
