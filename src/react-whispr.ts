@@ -416,7 +416,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
     handler: (config: C) => Promise<R>,
 ): [
         value: C,
-        setValue: (value: C) => void,
+        setValue: (updater: (draft: C) => C | void) => void,
         result: R | null
     ] {
     const [meta, setMeta] = useState<{
@@ -471,9 +471,14 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         setValue(result);
     }, [result, setValue]);
 
-    const returnedSetValue = useCallback((v: C) => {
+    const returnedSetValue = useCallback((updater: (draft: C) => C | void) => {
+
+        const cloned = structuredClone(meta.config);
+        const new_data = updater(cloned);
+        const chosen = new_data ?? cloned;
+
         setMeta({
-            config: v,
+            config: chosen,
             ts: Date.now(),
         });
     }, [setMeta]);
