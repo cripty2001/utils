@@ -468,7 +468,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         if (result === null)
             return;
 
-        if (result._meta.ts <= meta.ts)
+        if (result._meta.ts <= value._meta.ts)
             return;
 
         setValue(result);
