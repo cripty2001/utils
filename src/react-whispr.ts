@@ -35,12 +35,14 @@ export function useWhisprValue<I, O = I>(
 
     const [value, setValue] = useState(value_w.value);
 
-    value_w.subscribe((newValue) => {
-        if (isEqual(newValue, value))
-            return;
+    useEffect(() => {
+        return value_w.subscribe((newValue) => {
+            if (isEqual(newValue, value))
+                return;
 
-        setValue(newValue);
-    }, false);  // Already got the initial value, and this will call syncronously generate a react warning as called on an not yet mounted component
+            setValue(newValue);
+        });
+    }, [value_w]);
 
     return value;
 }
@@ -457,10 +459,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         if (result._meta.ts <= value._meta.ts)
             return;
 
-        setTimeout(() => {
-            // Async operations running too fast seems to interfer with the react mounting process, causing the update to arrive BEFORE the component is fully mounted.
-            setValue(result);
-        }, 20);
+        setValue(result);
     }, [result, value, setValue]);
 
     const returnedSetValue = useCallback((updater: (draft: C) => C | void) => {
