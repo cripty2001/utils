@@ -417,7 +417,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
     value: AsyncInputValue<C, R>,
     setValue: (value: AsyncInputValue<C, R>) => void,
     handler: (config: C) => Promise<R>,
-    setPending: (pending: boolean) => void,
+    setPending: (pending: boolean) => void = () => { },
 ): [
         value: C,
         setValue: (updater: (draft: C) => C | void) => void,
