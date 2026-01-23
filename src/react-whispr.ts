@@ -380,6 +380,7 @@ export type AsyncInputValue<C extends Record<string, JSONEncodable>, R extends R
  * @param value - Current external value containing both result data and metadata with config/timestamp. Metadata should be considered opaque, and always carried araoud as they are
  * @param setValue - Callback to update external value when async operations complete
  * @param handler - Async function that computes results from config.
+ * @param setPending? - Callback to check if the async operation is in flight or ended. If this is called with false, setValue has already been called with the latest result. To avoid concurrency problems, setValue is always called BEFORE calling this with false. No assumption be made for call with true. Please note that this function may be called rapidly even without real updates. The only assumption that should be made about this is the fact that once it is called with false, the value is guaranteed to be the latest reported one, until a call with true. A call with true may means that the value is outdated, or maybe no. There is simply no guarantee about the result when this value is true.
  * 
  * @returns Array containing:
  *   - `value`: Current config (updates synchronously with user input)
@@ -416,6 +417,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
     value: AsyncInputValue<C, R>,
     setValue: (value: AsyncInputValue<C, R>) => void,
     handler: (config: C) => Promise<R>,
+    setPending: (pending: boolean) => void,
 ): [
         value: C,
         setValue: (updater: (draft: C) => C | void) => void,
@@ -428,6 +430,10 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         config: value._meta.config,
         ts: value._meta.ts
     });
+
+    useEffect(() => {
+        setPending(true);
+    }, [meta, setPending]);
 
     useEffect(() => {
         if (value._meta.ts > meta.ts) {
@@ -457,13 +463,13 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
             return;
 
         if (result._meta.ts <= value._meta.ts)
-            return;
+            return setPending(false); // Value is already updated, but we still need to clear the pending state. Also, we can't just update the value, as it will cause loops.
 
         setValue(result);
-    }, [result, value, setValue]);
+        setPending(false);
+    }, [result, value, setValue, setPending]);
 
     const returnedSetValue = useCallback((updater: (draft: C) => C | void) => {
-
         const cloned = structuredClone(meta.config);
         const new_data = updater(cloned);
         const chosen = new_data ?? cloned;
