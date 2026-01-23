@@ -433,20 +433,6 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         }
     }, [value, meta, setMeta]);
 
-    // // React has always random problems with stale closures, expecially in async environment.
-    // // On the other side, the watched param of useAsync is always perfect
-    // // We aren't taking any risks, here
-    // type AsyncPack = {
-    //   c: C,
-    //   ts: number,
-    // }
-    // const asyncPack: AsyncPack = useMemo(() => {
-    //   return {
-    //     c: meta.config,
-    //     ts: meta.ts,
-    //   }
-    // }, [meta]);
-
     const result_d = useAsync<{
         config: C;
         ts: number;
@@ -471,7 +457,10 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         if (result._meta.ts <= value._meta.ts)
             return;
 
-        setValue(result);
+        setTimeout(() => {
+            // Async operations running too fast seems to interfer with the react mounting process, causing the update to arrive BEFORE the component is fully mounted.
+            setValue(result);
+        }, 20);
     }, [result, value, setValue]);
 
     const returnedSetValue = useCallback((updater: (draft: C) => C | void) => {
