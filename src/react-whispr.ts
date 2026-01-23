@@ -472,7 +472,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
             return;
 
         setValue(result);
-    }, [result, setValue]);
+    }, [result, value, setValue]);
 
     const returnedSetValue = useCallback((updater: (draft: C) => C | void) => {
 
