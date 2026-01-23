@@ -472,7 +472,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
             config: chosen,
             ts: Date.now(),
         });
-    }, [setMeta]);
+    }, [meta, setMeta]);
 
     return [
         meta.config,
