@@ -45,6 +45,7 @@ export class Dispatcher<I, O> {
      * 
      * @remarks If the debounce interval is 0, the function will be called synchronously, as a Whispr listener would do.
      * @remarks The value is deep checked for equality. The function will be called only if the value changed deeply
+     * @remarks Data updating flag is set in a synchronous way. This means that in the event your DEBOUNCE_INTERVAL is near infinity, you still get the data set to updating true immediately when you update the value. It just wait like this forever
      */
     constructor(value: Whispr<I>, f: DispatcherFunction<I, O>, DEBOUNCE_INTERVAL: number = 200) {
         // Initing state
