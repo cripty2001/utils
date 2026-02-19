@@ -12,10 +12,9 @@ export class Searcher<T> {
     }
 
     public search(query: string, limit: number): SearcherData<T>[] {
-        if (query === "") return this.data
-
         return this.data
             .filter(item =>
+                query === '' ||
                 item.queries.some(q => q.includes(
                     query.toLowerCase()
                 ))
