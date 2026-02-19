@@ -10,14 +10,16 @@ export class Searcher<T> {
         this.data = data
     }
 
-    public search(query: string): SearcherData<T>[] {
+    public search(query: string, limit: number = 10): SearcherData<T>[] {
         if (query === "") return this.data
 
-        return this.data.filter(item =>
-            item.queries.some(q => q.includes(
-                query.toLowerCase()
-            ))
-        )
+        return this.data
+            .filter(item =>
+                item.queries.some(q => q.includes(
+                    query.toLowerCase()
+                ))
+            )
+            .slice(0, limit)
     }
 
     public updateData(data: SearcherData<T>[]) {
