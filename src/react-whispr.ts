@@ -329,7 +329,7 @@ function getRelTimeFormat(_diff: number): { base: number, unit: string } {
  *  - The filtered data
  *  - A boolean indicating if the search is pending
  */
-export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], limit: number = 10): [string, (q: string) => void, SearcherData<T>[], boolean] {
+export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], limit: number): [string, (q: string) => void, SearcherData<T>[], boolean] {
     const [pending, setPending] = useState(false)
     const [results, setResults] = useState<AsyncInputValue<{ q: string }, { results: SearcherData<T>[] }>>(
         {

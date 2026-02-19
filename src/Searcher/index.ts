@@ -1,6 +1,7 @@
 
 export type SearcherData<T> = {
     queries: string[]
+    order: number
     doc: T
 }
 
@@ -10,7 +11,7 @@ export class Searcher<T> {
         this.data = data
     }
 
-    public search(query: string, limit: number = 10): SearcherData<T>[] {
+    public search(query: string, limit: number): SearcherData<T>[] {
         if (query === "") return this.data
 
         return this.data
@@ -19,6 +20,7 @@ export class Searcher<T> {
                     query.toLowerCase()
                 ))
             )
+            .sort((a, b) => b.order - a.order)
             .slice(0, limit)
     }
 
