@@ -25,7 +25,10 @@ export class Searcher<T> {
     }
 
     public updateData(data: SearcherData<T>[]) {
-        this.data = data
+        this.data = data.map(item => ({
+            ...item,
+            queries: item.queries.map(q => q.toLowerCase())
+        }))
     }
 }
 
