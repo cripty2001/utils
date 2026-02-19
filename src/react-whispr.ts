@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isEqual } from "lodash";
 import { CURRENT_TS_MS, getRandomId, JSONEncodable } from ".";
 import { Dispatcher } from "./Dispatcher";
-import { SearcherData, useSearcher_w } from "./Searcher";
+import { Searcher, SearcherData } from "./Searcher";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.
@@ -323,17 +323,41 @@ function getRelTimeFormat(_diff: number): { base: number, unit: string } {
 /**
  * React shorthand for the Searcher
  * @param data The data to search on 
- * @param q The query to search for 
- * @return The filtered data
- * 
+ * @return An arra containing
+ *  - The current query (updated synchronously with the user input)
+ *  - The function to set the query (aka the one to put onto the input element)
+ *  - The filtered data
+ *  - A boolean indicating if the search is pending
  */
-export function useSearcher<T>(data: SearcherData<T>[], q: string): SearcherData<T>[] {
-    const q_w = useWhispr(q)
-    const data_w = useWhispr(data)
-    const searcher = useSearcher_w(data_w, q_w)
-    return useWhisprValue(searcher)
-}
+export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[]): [string, (q: string) => void, SearcherData<T>[], boolean] {
+    const [pending, setPending] = useState(false)
+    const [results, setResults] = useState<AsyncInputValue<{ q: string }, { results: SearcherData<T>[] }>>(
+        {
+            results: [],
+            _meta: {
+                ts: 0,
+                config: { q: "" }
+            }
+        }
+    )
 
+    const searcher = useRef(new Searcher<T>(data))
+    useEffect(() => {
+        searcher.current.updateData(data)
+    }, [data])
+
+    const [q, setQ] = useAsyncInput<{ q: string }, { results: SearcherData<T>[] }>(results, setResults, async ({ q }) => {
+        return {
+            results: searcher.current.search(q)
+        }
+    }, setPending)
+    return [
+        q.q,
+        (q: string) => setQ(draft => { draft.q = q }),
+        results.results,
+        pending
+    ]
+}
 /**
  * A react ref hook with safe lazy initialization, ready for safe side effects.
  * @remarks The initialization function will only be called once, and the result will be stored in the ref.

@@ -1,4 +1,3 @@
-import { Whispr } from "@cripty2001/whispr"
 
 export type SearcherData<T> = {
     queries: string[]
@@ -26,24 +25,24 @@ export class Searcher<T> {
     }
 }
 
-export function useSearcher_w<T>(data: Whispr<SearcherData<T>[]>, query: Whispr<string>): Whispr<SearcherData<T>[]> {
-    const searcher = new Searcher<T>(data.value);
-    let unsubscribe_q: () => void = () => { }
-    let unsubscribe_d: () => void = () => { }
+// export function useSearcher_w<T>(data: Whispr<SearcherData<T>[]>, query: Whispr<string>): Whispr<SearcherData<T>[]> {
+//     const searcher = new Searcher<T>(data.value);
+//     let unsubscribe_q: () => void = () => { }
+//     let unsubscribe_d: () => void = () => { }
 
-    const [toReturn, setToReturn] = Whispr.create<SearcherData<T>[]>([], () => {
-        unsubscribe_q();
-        unsubscribe_d();
-    })
+//     const [toReturn, setToReturn] = Whispr.create<SearcherData<T>[]>([], () => {
+//         unsubscribe_q();
+//         unsubscribe_d();
+//     })
 
-    unsubscribe_q = query.subscribe((q) => {
-        let result = searcher.search(q);
-        setToReturn(result);
-    }, true)
+//     unsubscribe_q = query.subscribe((q) => {
+//         let result = searcher.search(q);
+//         setToReturn(result);
+//     }, true)
 
-    unsubscribe_d = data.subscribe((d) => {
-        searcher.updateData(d);
-    }, true)
+//     unsubscribe_d = data.subscribe((d) => {
+//         searcher.updateData(d);
+//     }, true)
 
-    return toReturn
-}
+//     return toReturn
+// }
