@@ -58,6 +58,10 @@
       "import": "./dist/Dispatcher.js",
       "types": "./dist/Dispatcher.d.ts"
     },
+    "./searcher": {
+      "import": "./dist/Searcher/index.js",
+      "types": "./dist/Searcher/index.d.ts"
+    },
     "./react-whispr": {
       "import": "./dist/react-whispr.js",
       "types": "./dist/react-whispr.d.ts"
