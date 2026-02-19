@@ -20,7 +20,7 @@ export class Searcher<T> {
                     query.toLowerCase()
                 ))
             )
-            .sort((a, b) => b.order - a.order)
+            .sort((a, b) => a.order - b.order)
             .slice(0, limit)
     }
 
