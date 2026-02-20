@@ -1,0 +1,160 @@
+import { JSONEncodable } from '@cripty2001/utils';
+import { Dispatcher } from '@cripty2001/utils/dispatcher';
+import { Whispr, WhisprSetter } from '@cripty2001/whispr';
+
+export type AppstorageData = Record<string, JSONEncodable>;
+
+export type AppstorageItemData<T extends AppstorageData> = {
+    key: string;
+    data: T;
+    rev: number;
+    deleted: boolean;
+};
+
+export class Appstorage {
+    private static readonly instances: Map<string, Appstorage> = new Map();
+    public static getInstance(key: string): Appstorage {
+        if (!this.instances.has(key))
+            this.instances.set(key, new Appstorage(key));
+        return this.instances.get(key)!;
+    }
+
+    public readonly PREFIX: string;
+    public index: Whispr<Record<string, AppstorageItem<any>>>;
+    private _setIndex: WhisprSetter<Record<string, AppstorageItem<any>>>;
+
+    private readonly refreshInterval = setInterval(() => {
+        this.refresh();
+    }, 200);
+
+    private constructor(PREFIX: string) {
+        this.PREFIX = PREFIX;
+        [this.index, this._setIndex] = Whispr.create<Record<string, AppstorageItem<any>>>({});
+    }
+
+    public add<T extends AppstorageData>(key: string, data: T): AppstorageItem<T> {
+        const k = `${this.PREFIX}${key}`;
+
+        if (localStorage.getItem(k) !== null)
+            throw new Error(`${key} already exists in storage`);
+
+        localStorage.setItem(k, JSON.stringify({
+            key: k,
+            data: data,
+            rev: 0,
+            deleted: false
+        }));
+
+        return AppstorageItem.get(this.PREFIX, key);
+    }
+
+    public get<T extends AppstorageData>(key: string): AppstorageItem<T> {
+        return AppstorageItem.get(this.PREFIX, key);
+    }
+
+    private listData(): string[] {
+        const toReturn: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key === null || !key.startsWith(this.PREFIX))
+                continue;
+            toReturn.push(key.replace(this.PREFIX, ""));
+        }
+        return toReturn;
+    }
+
+    private refresh() {
+        const newitems = this.listData()
+            .filter(key => this.index.value[key] === undefined)
+            .map(key => ({
+                key: key,
+                ref: this.get(key)
+            }))
+            .filter(item => !item.ref.data.value.deleted)
+            .reduce((acc, item) => {
+                acc[item.key] = item.ref;
+                return acc;
+            }, {} as Record<string, AppstorageItem<any>>)
+
+        if (Object.keys(newitems).length > 0) {
+            this._setIndex({
+                ...this.index.value,
+                ...newitems
+            });
+        }
+    }
+}
+
+class AppstorageItem<T extends AppstorageData> {
+    public readonly PREFIX: string;
+    private static readonly instances = new Map<string, AppstorageItem<any>>();
+    private static readonly refreshInterval = setInterval(() => {
+        this.instances.forEach(item => item.refresh());
+    }, 200);
+
+    public readonly key: string;
+    public readonly data: Whispr<AppstorageItemData<T>>;
+    public readonly update: (data: T) => void;
+    public readonly remove: () => void;
+
+    private _setData: WhisprSetter<AppstorageItemData<T>>;
+
+    public static get(PREFIX: string, key: string): AppstorageItem<any> {
+        const k = `${PREFIX}${key}`;
+        if (!this.instances.has(k))
+            this.instances.set(k, new AppstorageItem(PREFIX, key));
+        return this.instances.get(k)!;
+    }
+
+    private constructor(PREFIX: string, key: string) {
+        this.PREFIX = PREFIX;
+        this.key = key;
+
+        [this.data, this._setData] = Whispr.create<AppstorageItemData<T>>(
+            this.loadData()
+        );
+
+        this.update = (data: T) => {
+            this._setData({
+                key: `${this.PREFIX}${this.key}`,
+                rev: this.data.value.rev + 1,
+                deleted: false,
+                data: data
+            });
+        }
+
+        this.remove = () => {
+            this._setData({
+                key: `${this.PREFIX}${this.key}`,
+                rev: this.data.value.rev + 1,
+                deleted: true,
+                data: {} as T
+            });
+        }
+
+        new Dispatcher<AppstorageItemData<T>, void>(this.data, async () => {
+            const curr = this.loadData();
+            if (this.data.value.rev > curr.rev) {
+                localStorage.setItem(
+                    `${this.PREFIX}${this.key}`,
+                    JSON.stringify(this.data.value)
+                );
+            }
+        }, 500);
+    }
+
+    private refresh() {
+        const data = this.loadData();
+        if (data.rev > this.data.value.rev) {
+            console.log("Updating", this.data.value.rev, "->", data.rev)
+            this._setData(data);
+        }
+    }
+    private loadData(): AppstorageItemData<T> {
+        const raw_data = localStorage.getItem(`${this.PREFIX}${this.key}`);
+        if (raw_data === null)
+            throw new Error(`${this.key} does not exist in storage`);
+
+        return JSON.parse(raw_data) as AppstorageItemData<T>;
+    }
+}

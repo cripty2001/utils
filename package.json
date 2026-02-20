@@ -58,6 +58,10 @@
       "import": "./dist/Dispatcher.js",
       "types": "./dist/Dispatcher.d.ts"
     },
+    "./appstorage": {
+      "import": "./dist/AppStorage/index.js",
+      "types": "./dist/AppStorage/index.d.ts"
+    },
     "./searcher": {
       "import": "./dist/Searcher/index.js",
       "types": "./dist/Searcher/index.d.ts"
