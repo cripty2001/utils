@@ -333,7 +333,7 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
     const [pending, setPending] = useState(false)
     const [results, setResults] = useState<AsyncInputValue<{ q: string }, { results: SearcherData<T>[] }>>(
         {
-            results: data,
+            results: [],
             _meta: {
                 ts: 0,
                 config: { q: "" }
@@ -351,6 +351,8 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
             results: searcher.current.search(q, limit)
         }
     }, setPending)
+    searcher.current.search(q.q, limit)
+
     return [
         q.q,
         (q: string) => setQ(draft => { draft.q = q }),
