@@ -330,10 +330,15 @@ function getRelTimeFormat(_diff: number): { base: number, unit: string } {
  *  - A boolean indicating if the search is pending
  */
 export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], limit: number): [string, (q: string) => void, SearcherData<T>[], boolean] {
+    const searcher = useRef(new Searcher<T>(data))
+    useEffect(() => {
+        searcher.current.updateData(data)
+    }, [data])
+
     const [pending, setPending] = useState(false)
     const [results, setResults] = useState<AsyncInputValue<{ q: string }, { results: SearcherData<T>[] }>>(
         {
-            results: [],
+            results: searcher.current.search("", limit),
             _meta: {
                 ts: 0,
                 config: { q: "" }
@@ -341,17 +346,11 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
         }
     )
 
-    const searcher = useRef(new Searcher<T>(data))
-    useEffect(() => {
-        searcher.current.updateData(data)
-    }, [data])
-
     const [q, setQ] = useAsyncInput<{ q: string }, { results: SearcherData<T>[] }>(results, setResults, async ({ q }) => {
         return {
             results: searcher.current.search(q, limit)
         }
     }, setPending)
-    setQ(draft => { draft.q = "" })  // Running the first search with the empty query
 
     return [
         q.q,
