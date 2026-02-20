@@ -13,8 +13,6 @@ import { Searcher, SearcherData } from "./Searcher";
  * @param computer An optional function to compute the returned value. This is useful to extract a part of a larger whispr, or to compute a derived value. It is the analog of useMemo with a single dependency (the whispr itself)
  * @returns A reactive react value
  * 
- * @remarks The value is NOT REACTIVE, and the same applies to the computer, if any. Only changes to its content will trigger a change, not changes to the object itself.
- * 
  * @example
  * export default function MyComponent(props: { value:  Whispr<string> }) {
  *   const value = useWhisprValue(props.value);
@@ -26,23 +24,29 @@ export function useWhisprValue<I, O = I>(
     w: Whispr<I>,
     computer: (data: I) => O = (d) => d as unknown as O
 ): O {
-    const value_w = useRef(
-        Whispr.from(
+    const value_w = useRef<Whispr<O>>(
+        Whispr.create(computer(w.value))[0]
+    );
+    const unsubscribe = useRef<() => void>(() => { });
+
+    const [value, setValue] = useState(value_w.current.value);
+    const valueref = useRef(value);  // Yep, react and his strange stale closures...
+
+    useEffect(() => {
+        unsubscribe.current();
+        value_w.current = Whispr.from(
             { w },
             ({ w }) => computer(w)
         )
-    ).current;
-
-    const [value, setValue] = useState(value_w.value);
-
-    useEffect(() => {
-        return value_w.subscribe((newValue) => {
-            if (isEqual(newValue, value))
+        unsubscribe.current = value_w.current.subscribe((newValue) => {
+            if (isEqual(newValue, valueref.current))
                 return;
 
             setValue(newValue);
+            valueref.current = newValue;
         });
-    }, [value_w]);
+        return () => unsubscribe.current();
+    }, [w, computer]);
 
     return value;
 }
