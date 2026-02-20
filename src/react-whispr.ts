@@ -82,7 +82,7 @@ export function useWhispr<T>(data: T | Whispr<T>): Whispr<T> {
  * @param cb The callback to call on value change
  * @param unsafe If true, the callback will be allowed to throw errors, that will then bubble up
  */
-export function useOnWhispr<T>(w: Whispr<T>, unsafe: boolean = false, cb: (value: T) => void,): void {
+export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void, unsafe: boolean = false): void {
     useEffect(() => {
         const unsub = w.subscribe(cb, undefined, unsafe);
         return () => unsub();
@@ -249,11 +249,11 @@ export function useAsyncEffect<I>(
     debounce: number = 200
 ): void {
     const dispatcher = useAsync(f, data, debounce);
-    useOnWhispr(dispatcher.data, true, (data) => {
+    useOnWhispr(dispatcher.data, (data) => {
         if (!data.loading && !data.ok) {
             throw data.error;
         }
-    });
+    }, true);
 }
 
 /**
