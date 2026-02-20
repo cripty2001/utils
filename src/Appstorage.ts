@@ -39,6 +39,7 @@ export class Appstorage {
     private constructor(PREFIX: string) {
         this.PREFIX = PREFIX;
         [this.index, this._setIndex] = Whispr.create<Record<string, IAppstorageItem<any>>>({});
+        this.refresh();
     }
 
     public add<T extends AppstorageData>(key: string, data: T): IAppstorageItem<T> {
