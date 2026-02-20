@@ -331,14 +331,11 @@ function getRelTimeFormat(_diff: number): { base: number, unit: string } {
  */
 export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], limit: number): [string, (q: string) => void, SearcherData<T>[], boolean] {
     const searcher = useRef(new Searcher<T>(data))
-    useEffect(() => {
-        searcher.current.updateData(data)
-    }, [data])
 
     const [pending, setPending] = useState(false)
     const [results, setResults] = useState<AsyncInputValue<{ q: string }, { results: SearcherData<T>[] }>>(
         {
-            results: searcher.current.search("", limit),
+            results: [],
             _meta: {
                 ts: 0,
                 config: { q: "" }
@@ -351,6 +348,11 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
             results: searcher.current.search(q, limit)
         }
     }, setPending)
+
+    useEffect(() => {
+        searcher.current.updateData(data)
+        setQ(draft => { draft.q = "" })
+    }, [data, setQ])
 
     return [
         q.q,
