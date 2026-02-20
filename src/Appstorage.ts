@@ -53,12 +53,17 @@ export class Appstorage {
             rev: 0,
             deleted: false
         }));
+        this.refresh();
 
-        return AppstorageItem.get(this.PREFIX, key);
+        return this.get(key);
     }
 
     public get<T extends AppstorageData>(key: string): IAppstorageItem<T> {
-        return AppstorageItem.get(this.PREFIX, key);
+        this.refresh();
+        const toReturn = this.index.value[key];
+        if (toReturn === undefined)
+            throw new Error(`${key} does not exist in storage`);
+        return toReturn;
     }
 
     private listData(): string[] {
@@ -77,7 +82,7 @@ export class Appstorage {
             .filter(key => this.index.value[key] === undefined)
             .map(key => ({
                 key: key,
-                ref: this.get(key)
+                ref: AppstorageItem.get(this.PREFIX, key)
             }))
             .filter(item => !item.ref.data.value.deleted)
             .reduce((acc, item) => {
@@ -108,6 +113,10 @@ class AppstorageItem<T extends AppstorageData> implements IAppstorageItem<T> {
 
     private _setData: WhisprSetter<AppstorageItemData<T>>;
 
+    /**
+     * Please note: Directly using this method is UNSAFE.
+     * If you need to get an item, use the Appstorage.get() method instead.
+     */
     public static get(PREFIX: string, key: string): AppstorageItem<any> {
         const k = `${PREFIX}${key}`;
         if (!this.instances.has(k))
@@ -155,7 +164,6 @@ class AppstorageItem<T extends AppstorageData> implements IAppstorageItem<T> {
     private refresh() {
         const data = this.loadData();
         if (data.rev > this.data.value.rev) {
-            console.log("Updating", this.data.value.rev, "->", data.rev)
             this._setData(data);
         }
     }
