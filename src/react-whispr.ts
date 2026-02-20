@@ -351,8 +351,11 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
 
     useEffect(() => {
         searcher.current.updateData(data)
-        setQ(draft => { draft.q = "" })
-    }, [data, setQ])
+        setResults(draft => {
+            draft.results = searcher.current.search(q.q, limit)
+            return draft
+        })
+    }, [data, q, limit, setResults])
 
     return [
         q.q,
