@@ -351,7 +351,7 @@ export function useSearcher<T extends JSONEncodable>(data: SearcherData<T>[], li
             results: searcher.current.search(q, limit)
         }
     }, setPending)
-    searcher.current.search(q.q, limit)
+    setQ(draft => { draft.q = "" })  // Running the first search with the empty query
 
     return [
         q.q,
