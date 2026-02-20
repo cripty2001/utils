@@ -1,6 +1,7 @@
-import { JSONEncodable } from '@cripty2001/utils';
-import { Dispatcher } from '@cripty2001/utils/dispatcher';
 import { Whispr, WhisprSetter } from '@cripty2001/whispr';
+
+import { Dispatcher } from './Dispatcher';
+import { JSONEncodable } from './index';
 
 export type AppstorageData = Record<string, JSONEncodable>;
 
@@ -11,6 +12,14 @@ export type AppstorageItemData<T extends AppstorageData> = {
     deleted: boolean;
 };
 
+export interface IAppstorageItem<T extends AppstorageData> {
+    readonly PREFIX: string;
+    readonly key: string;
+    readonly data: Whispr<AppstorageItemData<T>>;
+    readonly update: (data: T) => void;
+    readonly remove: () => void;
+}
+
 export class Appstorage {
     private static readonly instances: Map<string, Appstorage> = new Map();
     public static getInstance(key: string): Appstorage {
@@ -20,8 +29,8 @@ export class Appstorage {
     }
 
     public readonly PREFIX: string;
-    public index: Whispr<Record<string, AppstorageItem<any>>>;
-    private _setIndex: WhisprSetter<Record<string, AppstorageItem<any>>>;
+    public index: Whispr<Record<string, IAppstorageItem<any>>>;
+    private _setIndex: WhisprSetter<Record<string, IAppstorageItem<any>>>;
 
     private readonly refreshInterval = setInterval(() => {
         this.refresh();
@@ -29,10 +38,10 @@ export class Appstorage {
 
     private constructor(PREFIX: string) {
         this.PREFIX = PREFIX;
-        [this.index, this._setIndex] = Whispr.create<Record<string, AppstorageItem<any>>>({});
+        [this.index, this._setIndex] = Whispr.create<Record<string, IAppstorageItem<any>>>({});
     }
 
-    public add<T extends AppstorageData>(key: string, data: T): AppstorageItem<T> {
+    public add<T extends AppstorageData>(key: string, data: T): IAppstorageItem<T> {
         const k = `${this.PREFIX}${key}`;
 
         if (localStorage.getItem(k) !== null)
@@ -48,7 +57,7 @@ export class Appstorage {
         return AppstorageItem.get(this.PREFIX, key);
     }
 
-    public get<T extends AppstorageData>(key: string): AppstorageItem<T> {
+    public get<T extends AppstorageData>(key: string): IAppstorageItem<T> {
         return AppstorageItem.get(this.PREFIX, key);
     }
 
@@ -74,7 +83,7 @@ export class Appstorage {
             .reduce((acc, item) => {
                 acc[item.key] = item.ref;
                 return acc;
-            }, {} as Record<string, AppstorageItem<any>>)
+            }, {} as Record<string, IAppstorageItem<any>>)
 
         if (Object.keys(newitems).length > 0) {
             this._setIndex({
@@ -85,7 +94,7 @@ export class Appstorage {
     }
 }
 
-class AppstorageItem<T extends AppstorageData> {
+class AppstorageItem<T extends AppstorageData> implements IAppstorageItem<T> {
     public readonly PREFIX: string;
     private static readonly instances = new Map<string, AppstorageItem<any>>();
     private static readonly refreshInterval = setInterval(() => {
