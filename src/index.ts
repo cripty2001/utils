@@ -284,7 +284,7 @@ export function fn2promise<T>(fn: () => T | Promise<T>): Promise<T> {
         Promise.resolve(result);
 }
 
-export type SafeApplyCb<T> = (draft: T) => T | void;
+export type SafeApplyed<T> = (updater: (draft: T) => T | void) => T;
 export function safeApply<T>(updater: (draft: T) => T | void, incoming: T): T {
     const cloned = structuredClone(incoming);
     const new_data = updater(cloned);
