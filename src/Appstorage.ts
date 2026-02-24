@@ -18,6 +18,7 @@ export interface IAppstorageItem<T extends AppstorageData> {
     readonly data: Whispr<AppstorageItemData<T>>;
     readonly update: (data: T) => void;
     readonly remove: () => void;
+    readonly flush: () => void;
 }
 
 export class Appstorage {
