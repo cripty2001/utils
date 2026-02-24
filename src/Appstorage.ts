@@ -98,6 +98,12 @@ export class Appstorage {
             });
         }
     }
+
+    public flush() {
+        Object.values(this.index.value).forEach(item => {
+            item.flush();
+        });
+    }
 }
 
 class AppstorageItem<T extends AppstorageData> implements IAppstorageItem<T> {
@@ -152,14 +158,18 @@ class AppstorageItem<T extends AppstorageData> implements IAppstorageItem<T> {
         }
 
         new Dispatcher<AppstorageItemData<T>, void>(this.data, async () => {
-            const curr = this.loadData();
-            if (this.data.value.rev > curr.rev) {
-                localStorage.setItem(
-                    `${this.PREFIX}${this.key}`,
-                    JSON.stringify(this.data.value)
-                );
-            }
+            this.flush();
         }, 500);
+    }
+
+    public flush() {
+        const curr = this.loadData();
+        if (this.data.value.rev > curr.rev) {
+            localStorage.setItem(
+                `${this.PREFIX}${this.key}`,
+                JSON.stringify(this.data.value)
+            );
+        }
     }
 
     private refresh() {
