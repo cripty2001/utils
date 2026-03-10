@@ -52,51 +52,63 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
     },
     "./dispatcher": {
       "import": "./dist/Dispatcher.js",
-      "types": "./dist/Dispatcher.d.ts"
+      "types": "./dist/Dispatcher.d.ts",
+      "require": "./dist/Dispatcher.js"
     },
     "./appstorage": {
       "import": "./dist/Appstorage.js",
-      "types": "./dist/Appstorage.d.ts"
+      "types": "./dist/Appstorage.d.ts",
+      "require": "./dist/Appstorage.js"
     },
     "./searcher": {
       "import": "./dist/Searcher/index.js",
-      "types": "./dist/Searcher/index.d.ts"
+      "types": "./dist/Searcher/index.d.ts",
+      "require": "./dist/Searcher/index.js"
     },
     "./react-whispr": {
       "import": "./dist/react-whispr.js",
-      "types": "./dist/react-whispr.d.ts"
+      "types": "./dist/react-whispr.d.ts",
+      "require": "./dist/react-whispr.js"
     },
     "./logger": {
       "import": "./dist/Logger/Logger.js",
-      "types": "./dist/Logger/Logger.d.ts"
+      "types": "./dist/Logger/Logger.d.ts",
+      "require": "./dist/Logger/Logger.js"
     },
     "./logger/react": {
       "import": "./dist/Logger/react-display.js",
-      "types": "./dist/Logger/react-display.d.ts"
+      "types": "./dist/Logger/react-display.d.ts",
+      "require": "./dist/Logger/react-display.js"
     },
     "./appserver/server": {
       "import": "./dist/Appserver/server.js",
-      "types": "./dist/Appserver/server.d.ts"
+      "types": "./dist/Appserver/server.d.ts",
+      "require": "./dist/Appserver/server.js"
     },
     "./appserver/client": {
       "import": "./dist/Appserver/client.js",
-      "types": "./dist/Appserver/client.d.ts"
+      "types": "./dist/Appserver/client.d.ts",
+      "require": "./dist/Appserver/client.js"
     },
     "./mail-template": {
       "import": "./dist/MailTemplate/index.js",
-      "types": "./dist/MailTemplate/index.d.ts"
+      "types": "./dist/MailTemplate/index.d.ts",
+      "require": "./dist/MailTemplate/index.js"
     },
     "./react": {
       "import": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
+      "types": "./dist/react/index.d.ts",
+      "require": "./dist/react/index.js"
     },
     "./react-ui": {
       "import": "./dist/react-ui/index.js",
-      "types": "./dist/react-ui/index.d.ts"
+      "types": "./dist/react-ui/index.d.ts",
+      "require": "./dist/react-ui/index.js"
     }
   }
 }
