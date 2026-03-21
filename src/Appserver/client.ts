@@ -49,10 +49,8 @@ export class Client {
             if (token === null)
                 return null;
 
-            console.log('Attempting login with token: ', token);
             const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
 
-            console.log('Login successful: ', user);
             return user;
         }, 0);  // Sync execution
     }
@@ -66,7 +64,7 @@ export class Client {
         return await this.user.data.wait(data => {
             if (data.loading)
                 return;
-            console.log('Login result in waiter: ', data);
+
             return data.ok
         });
     }
