@@ -72,8 +72,9 @@ export class Appserver<U extends AppserverData> {
 
         this.app = express();
         this.app.listen(port);
-
+        console.log("Origins: ", origins);
         if (origins.length > 0) {
+            console.log("Using cors for origins: ", origins);
             this.app.use(cors({
                 origin: origins,
                 credentials: true
