@@ -198,7 +198,12 @@ export class Appserver<U extends AppserverData> {
             `/exec/${action}`,
             inputSchema,
             true,
-            (input, user) => handler(input as I, user as U)
+            (input, user) => {
+                if (user === null)
+                    throw new AppserverAuthError();
+
+                return handler(input as I, user);
+            }
         );
     }
 
