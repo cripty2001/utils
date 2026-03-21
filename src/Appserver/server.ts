@@ -1,6 +1,7 @@
 import { decode, encode } from "@msgpack/msgpack";
 import { Static, TSchema, Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
+import cors from 'cors';
 import express from 'express';
 import { AppserverData } from './common';
 
@@ -11,15 +12,6 @@ export { Static, TSchema, Type } from '@sinclair/typebox';
 export { Value } from '@sinclair/typebox/value';
 
 encode({}); // Fixes issue with msgpack not being included in build
-
-/**
- * @deprecated use AppserverPublicHandler and AppserverPrivateHandler instead, that offers better typescript support
- */
-export type AppserverHandler<
-    I extends AppserverData,
-    U extends AppserverData,
-    O extends AppserverData,
-> = (input: I, user: U | null) => Promise<O> | O;
 
 export type AppserverPublicHandler<
     I extends AppserverData,
@@ -74,12 +66,19 @@ export class Appserver<U extends AppserverData> {
     private getMetrics: () => Record<string, number>;
     private registered: Set<string> = new Set();
 
-    constructor(port: number, parseUser: AppserverUsergetter<U>, getMetrics: () => Record<string, number>) {
+    constructor(port: number, parseUser: AppserverUsergetter<U>, getMetrics: () => Record<string, number>, origins: string[] = []) {
         this.parseUser = parseUser;
         this.getMetrics = getMetrics;
 
         this.app = express();
         this.app.listen(port);
+
+        if (origins.length > 0) {
+            this.app.use(cors({
+                origin: origins,
+                credentials: true
+            }));
+        }
 
         this.app.get('/metrics', async (req, res) => {
             await this.handleMetricsRequest(req, res);
@@ -153,28 +152,6 @@ export class Appserver<U extends AppserverData> {
         };
     }
 
-    /**
-     * Registers a msgpack RPC endpoint under `/exec/${action}`.
-     * @param action unique action name (duplicates throw)
-     * @param inputSchema typebox schema used for runtime validation
-     * @param auth when true rejects requests without a valid user
-     * @param handler business logic returning serializable data
-     * 
-     * @deprecated use registerPublic and registerPrivate instead, that offers better typescript support
-     */
-    public register<
-        ISchema extends TSchema,
-        O extends AppserverData,
-        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
-    >(
-        action: string,
-        inputSchema: ISchema,
-        auth: boolean,
-        handler: AppserverHandler<I, U, O>
-    ): void {
-        this.unsafeRegister(`/exec/${action}`, inputSchema, auth, handler);
-    }
-
     public registerPublic<
         ISchema extends TSchema,
         O extends AppserverData,
@@ -215,7 +192,7 @@ export class Appserver<U extends AppserverData> {
         action: string,
         inputSchema: ISchema,
         auth: boolean,
-        handler: AppserverHandler<I, U, O>): void {
+        handler: AppserverPublicHandler<I, O> | AppserverPrivateHandler<I, U, O>): void {
         if (this.registered.has(action))
             throw new Error(`Action ${action} is already registered`);
         this.registered.add(action)

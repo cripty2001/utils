@@ -23,9 +23,11 @@
   ],
   "dependencies": {
     "@cripty2001/whispr": "^0.4.1",
+    "cors": "^2.8.6",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/lodash": "^4.17.21",
     "@types/mjml": "^4.7.4",
