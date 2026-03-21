@@ -49,7 +49,7 @@ export class Client {
             if (token === null)
                 return null;
 
-            const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('auth/whoami', {});
+            const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('/auth/whoami', {});
 
             return user;
         }, 0);  // Sync execution
