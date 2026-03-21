@@ -12,11 +12,26 @@ export { Value } from '@sinclair/typebox/value';
 
 encode({}); // Fixes issue with msgpack not being included in build
 
+/**
+ * @deprecated use AppserverPublicHandler and AppserverPrivateHandler instead, that offers better typescript support
+ */
 export type AppserverHandler<
     I extends AppserverData,
     U extends AppserverData,
     O extends AppserverData,
 > = (input: I, user: U | null) => Promise<O> | O;
+
+export type AppserverPublicHandler<
+    I extends AppserverData,
+    O extends AppserverData,
+> = (input: I) => Promise<O> | O;
+
+export type AppserverPrivateHandler<
+    I extends AppserverData,
+    U extends AppserverData,
+    O extends AppserverData,
+> = (input: I, user: U) => Promise<O> | O;
+
 
 export type AppserverUsergetter<U extends AppserverData> = (token: string) => Promise<U | null>;
 
@@ -144,6 +159,8 @@ export class Appserver<U extends AppserverData> {
      * @param inputSchema typebox schema used for runtime validation
      * @param auth when true rejects requests without a valid user
      * @param handler business logic returning serializable data
+     * 
+     * @deprecated use registerPublic and registerPrivate instead, that offers better typescript support
      */
     public register<
         ISchema extends TSchema,
@@ -153,8 +170,36 @@ export class Appserver<U extends AppserverData> {
         action: string,
         inputSchema: ISchema,
         auth: boolean,
-        handler: AppserverHandler<I, U, O>): void {
+        handler: AppserverHandler<I, U, O>
+    ): void {
         this.unsafeRegister(`/exec/${action}`, inputSchema, auth, handler);
+    }
+
+    public registerPublic<
+        ISchema extends TSchema,
+        O extends AppserverData,
+        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
+    >(
+        action: string,
+        inputSchema: ISchema,
+        handler: AppserverPublicHandler<I, O>): void {
+        this.unsafeRegister(`/exec/${action}`, inputSchema, false, handler);
+    }
+
+    public registerPrivate<
+        ISchema extends TSchema,
+        O extends AppserverData,
+        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
+    >(
+        action: string,
+        inputSchema: ISchema,
+        handler: AppserverPrivateHandler<I, U, O>): void {
+        this.unsafeRegister(
+            `/exec/${action}`,
+            inputSchema,
+            true,
+            (input, user) => handler(input as I, user as U)
+        );
     }
 
     private unsafeRegister<
