@@ -219,7 +219,7 @@ export class Appserver<U extends AppserverData> {
 
                     return {
                         status: 200,
-                        data: await handler(unsafeData as I, user)
+                        data: await handler(unsafeData as I, user as U)
                     }
 
                 } catch (e) {
