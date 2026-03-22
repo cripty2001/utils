@@ -71,7 +71,6 @@ export class Appserver<U extends AppserverData> {
         this.getMetrics = getMetrics;
 
         this.app = express();
-        this.app.listen(port);
         console.log("Origins: ", origins);
         if (origins.length > 0) {
             console.log("Using cors for origins: ", origins);
@@ -86,6 +85,8 @@ export class Appserver<U extends AppserverData> {
         });
 
         this.registerAuth(this.app);
+
+        this.app.listen(port);
     }
 
     private registerAuth(app: express.Express): void {
