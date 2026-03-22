@@ -143,7 +143,6 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
         if (value === undefined) return;
         if (isEqual(v, value)) return;
 
-        console.log('SYNC DOWNSTREAM', value);
         setV(value);
     }, [value]);
 
