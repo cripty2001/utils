@@ -243,7 +243,7 @@ export const CURRENT_TS_MS = () => {
 };
 
 export function getClock(rate: number): Whispr<number> {
-    return currentTsMs.transform((curr) => Math.floor(curr / rate));
+    return CURRENT_TS_MS().transform((curr) => Math.floor(curr / rate));
 }
 
 export function timediff2HumanReadable(diffMs: number): string {
