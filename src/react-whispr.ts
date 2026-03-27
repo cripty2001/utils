@@ -2,7 +2,7 @@ import { Whispr } from "@cripty2001/whispr";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
-import { CURRENT_TS_MS, getRandomId, JSONEncodable } from ".";
+import { CURRENT_TS_MS, getClock, getRandomId, JSONEncodable } from ".";
 import { Dispatcher } from "./Dispatcher";
 import { Searcher, SearcherData } from "./Searcher";
 
@@ -95,6 +95,15 @@ export function useOnWhispr<T>(w: Whispr<T>, cb: (value: T) => void, unsafe: boo
  */
 export function useCurrentTimestamp(): number {
     return useWhisprValue(CURRENT_TS_MS());
+}
+
+/**
+ * Return a reactive clock value, based on the current timestamp and a given rate.
+ * @param rate The rate to use for the clock
+ * @returns The clock value
+ */
+export function useClock(rate: number): Whispr<number> {
+    return useWhisprValue(getClock(rate));
 }
 
 /**

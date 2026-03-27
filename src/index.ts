@@ -237,11 +237,16 @@ export const CURRENT_TS_MS = () => {
     if (currentTsMsInterval === null) {
         currentTsMsInterval = setInterval(() => {
             setCurrentTsMs(Date.now());
-        }, 200);
+        }, 16);
     }
     return currentTsMs;
 };
 
+export function getClock(rate: number): Whispr<number> {
+    return Whispr.from({ curr: currentTsMs }, ({ curr }) => {
+        return Math.floor(curr / rate);
+    });
+}
 
 export function timediff2HumanReadable(diffMs: number): string {
     const { unit, diff } = (() => {
