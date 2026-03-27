@@ -102,7 +102,7 @@ export function useCurrentTimestamp(): number {
  * @param rate The rate to use for the clock
  * @returns The clock value
  */
-export function useClock(rate: number): Whispr<number> {
+export function useClock(rate: number): number {
     return useWhisprValue(getClock(rate));
 }
 
