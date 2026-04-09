@@ -197,7 +197,10 @@ export class Appserver<U extends AppserverData> {
             throw new Error(`Action ${action} is already registered`);
         this.registered.add(action)
 
-        this.app.post(action, express.raw({ type: 'application/vnd.msgpack' }), async (req, res) => {
+        this.app.post(action, express.raw({
+            type: 'application/vnd.msgpack',
+            limit: '2gb'
+        }), async (req, res) => {
             const { status, data } = await (async () => {
                 try {
                     const { data: unsafeData, user } = await this.parseInput<I>(req);
