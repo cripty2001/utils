@@ -25,7 +25,8 @@ if (typeof document !== 'undefined') {
 export type ModalComponentProps = {
     children: React.ReactNode,
     open: boolean,
-    setOpen: (open: boolean) => void
+    setOpen: (open: boolean) => void,
+    animate: boolean
 }
 
 let modalCount = 0
@@ -57,7 +58,7 @@ export default function ModalComponent(props: ModalComponentProps) {
             onClick={() => props.setOpen(false)}
         >
             <div
-                style={{ maxWidth: '100%', animation: 'slide-up 0.3s ease-out' }}
+                style={{ maxWidth: '100%', animation: props.animate ? 'slide-up 0.3s ease-out': '' }}
                 onClick={(e) => e.stopPropagation()}
             >
                 {props.children}
