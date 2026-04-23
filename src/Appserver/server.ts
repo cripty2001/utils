@@ -45,7 +45,7 @@ export type AppserverModule<
 
 export function createDispatch(): {
     register: <ISchema extends TSchema>(action: string, mod: AppserverModule<ISchema>) => void;
-    dispatch: (req: Express.Request, res: Express.Response) => Promise<void>;
+    dispatch: (req: express.Request, res: express.Response) => Promise<void>;
 } {
     const registry = new Map<string, AppserverModule>();
 
@@ -77,25 +77,37 @@ export function createDispatch(): {
             const { action, payload } = parsed as Record<string, AppserverData>;
 
             if (typeof action !== 'string')
-                return respond(400, { error: 'Missing action field', code: 'REQUEST_INVALID_ACTION' });
+                throw new AppserverError("REQUEST_INVALID_ACTION", "Missing action field", 400);
 
             const mod = registry.get(action);
             if (mod === undefined)
-                return respond(404, { error: `Action not found: ${action}`, code: 'ACTION_NOT_FOUND' });
+                throw new AppserverError("ACTION_NOT_FOUND", `Action not found: ${action}`, 404);
 
-            const token = req.headers['authorization']?.startsWith('Bearer ') ? req.headers['authorization'].slice(7) : undefined;
+            const token = req.headers['authorization']?.startsWith('Bearer ') ?
+                req.headers['authorization'].slice(7) :
+                undefined;
 
             if (!Value.Check(mod.schema, payload))
-                return respond(422, { errors: [...Value.Errors(mod.schema, payload)], received: payload });
+                return respond(422, {
+                    errors: JSON.stringify(Value.Errors(mod.schema, payload)),
+                    received: payload as AppserverData,
+                });
 
             return respond(200, await mod.handler(payload, token));
 
         } catch (e) {
             if (e instanceof AppserverError)
-                return respond(e.status, { error: e.message, code: e.code, payload: e.payload });
+                return respond(e.status, {
+                    error: e.message,
+                    code: e.code,
+                    payload: e.payload
+                });
 
             console.error("Unhandled server error:", e);
-            return respond(500, { error: 'Internal server error', code: 'INTERNAL_SERVERERROR' });
+            return respond(500, {
+                error: 'Internal server error',
+                code: 'INTERNAL_SERVERERROR'
+            });
         }
     };
 
