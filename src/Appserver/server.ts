@@ -62,10 +62,18 @@ export class AppserverDispatcher {
             withFileTypes: true
         });
 
-        for (const entry of files) {
-            if (!entry.isFile() || !entry.name.endsWith('.js'))
-                continue;
+        const jsFiles = files.filter(e => e.isFile() && e.name.endsWith('.js'));
 
+        if (jsFiles.length === 0) {
+            console.warn(
+                `[appserver] autoload found no .js files in "${absBase}".`,
+                `If you are using TypeScript, make sure the api directory is included in your tsconfig`,
+                `and that you are pointing autoload at the compiled output directory, not the source.`
+            );
+            return;
+        }
+
+        for (const entry of jsFiles) {
             const fullPath = path.join(entry.parentPath, entry.name);
 
             const action = path
