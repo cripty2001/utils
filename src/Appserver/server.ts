@@ -1,10 +1,8 @@
 import { decode, encode } from "@msgpack/msgpack";
-import { Static, TSchema, Type } from '@sinclair/typebox';
+import { Static, TSchema } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
-import cors from 'cors';
-import express from 'express';
+import type express from 'express';
 import { AppserverData } from './common';
-
 export type { AppserverData };
 
 // Helpful for avoiding sinclair version mismatch between this and the actual user of the package
@@ -13,19 +11,10 @@ export { Value } from '@sinclair/typebox/value';
 
 encode({}); // Fixes issue with msgpack not being included in build
 
-export type AppserverPublicHandler<
+export type AppserverHandler<
     I extends AppserverData,
     O extends AppserverData,
-> = (input: I) => Promise<O> | O;
-
-export type AppserverPrivateHandler<
-    I extends AppserverData,
-    U extends AppserverData,
-    O extends AppserverData,
-> = (input: I, user: U) => Promise<O> | O;
-
-
-export type AppserverUsergetter<U extends AppserverData> = (token: string) => Promise<U | null>;
+> = (input: I, auth: string | undefined) => Promise<O> | O;
 
 class AppserverError extends Error {
     constructor(public code: string, message: string, public payload: AppserverData = {}, public status = 500) {
@@ -34,8 +23,8 @@ class AppserverError extends Error {
 }
 
 export class AppserverAuthError extends AppserverError {
-    constructor() {
-        super("PERMISSION_DENIED", "You have no right to access this page", {}, 403);
+    constructor(message: string = "You have no right to access this page", code: string = "PERMISSION_DENIED") {
+        super(code, message, {}, 403);
     }
 }
 
@@ -45,204 +34,70 @@ export class AppserverHandledError extends AppserverError {
     }
 }
 
-/**
- * Lightweight typed RPC runner that exposes POST `/exec/:action` endpoints using msgpack payloads
- * and a GET `/metrics` endpoint for Prometheus gauges.
- *
- * Usage:
- * const app = new Appserver(8080, parseToken, collectMetrics);
- * app.register('sum', SumSchema, true, async (input, user) => ({ total: input.a + input.b }));
- *
- * Request requirements:
- * - `Content-Type: application/vnd.msgpack`
- * - Body is msgpack-encoded object matching the provided schema.
- * - Optional `Authorization: Bearer <token>` header is decoded via the provided parseUser function.
- *
- * Responses are msgpack encoded objects with either handler data or `{ error, code, payload }` for handled errors.
- */
-export class Appserver<U extends AppserverData> {
-    private app: express.Express;
-    private parseUser: AppserverUsergetter<U>;
-    private getMetrics: () => Record<string, number>;
-    private registered: Set<string> = new Set();
+export type AppserverModule<
+    ISchema extends TSchema = TSchema,
+    O extends AppserverData = AppserverData,
+    I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
+> = {
+    schema: ISchema;
+    handler: AppserverHandler<I, O>;
+};
 
-    constructor(port: number, parseUser: AppserverUsergetter<U>, getMetrics: () => Record<string, number>, origins: string[] = []) {
-        this.parseUser = parseUser;
-        this.getMetrics = getMetrics;
+export function createDispatch(): {
+    register: <ISchema extends TSchema>(action: string, mod: AppserverModule<ISchema>) => void;
+    dispatch: (req: Express.Request, res: Express.Response) => Promise<void>;
+} {
+    const registry = new Map<string, AppserverModule>();
 
-        this.app = express();
-        if (origins.length > 0) {
-            this.app.use(cors({
-                origin: origins,
-                credentials: true
-            }));
-        }
-
-        this.app.get('/metrics', async (req, res) => {
-            await this.handleMetricsRequest(req, res);
-        });
-
-        this.registerAuth(this.app);
-
-        this.app.listen(port);
+    function register<ISchema extends TSchema>(action: string, mod: AppserverModule<ISchema>): void {
+        if (registry.has(action))
+            throw new Error(`Action already registered: "${action}"`);
+        registry.set(action, mod as AppserverModule);
     }
 
-    private registerAuth(app: express.Express): void {
-        this.unsafeRegister('/auth/whoami', Type.Object({}), false, async (input, user) => {
-            const mappedUser = Object.fromEntries(
-                Object.entries(user ?? {})
-                    .filter(([key]) => !key.startsWith('_'))
-            );
-
-            return {
-                user: user !== null ? mappedUser : null
-            };
-        });
-    }
-
-    private async handleMetricsRequest(req: express.Request, res: express.Response): Promise<void> {
-        try {
-            const metrics = this.getMetrics();
-            const toReturn = Object.entries(metrics)
-                .map(([name, value]) => {
-                    if (typeof value !== 'number' || !isFinite(value))
-                        throw new Error(`Metric value for "${name}" is not a number`);
-
-                    const prometheusName = 'app_' + name
-                        .toLowerCase()
-                        .replace(/[^a-z0-9_]/g, '_')
-                        .replace(/_+/g, '_')
-                        .replace(/^_+|_+$/g, '');
-
-                    return `# TYPE ${prometheusName} gauge\n${prometheusName} ${value}\n`;
-                })
-                .join('');
-
-            res
-                .status(200)
-                .type('text/plain')
-                .send(toReturn);
-        } catch (e) {
-            console.log("Error generating metrics:", e);
-            res
-                .status(500)
-                .type('text/plain')
-                .send('# Error generating metrics\n');
-        }
-    }
-
-    private async parseInput<T extends AppserverData>(req: any): Promise<{ data: T; user: U | null; }> {
-        if (req.headers['content-type'] !== 'application/vnd.msgpack')
-            throw new AppserverError('REQUEST_INVALID_TYPE_HEADER', 'Content-Type must be a messagepack (application/vnd.msgpack)', 400);
-
-        const data = (() => {
-            try {
-                return decode(req.body);
-            } catch (e) {
-                throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', 400);
-            }
-        })() as T;
-
-        const authHeader = req.headers['authorization'];
-        const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
-        return {
-            data,
-            user: token ? await this.parseUser(token) : null
-        };
-    }
-
-    public registerPublic<
-        ISchema extends TSchema,
-        O extends AppserverData,
-        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
-    >(
-        action: string,
-        inputSchema: ISchema,
-        handler: AppserverPublicHandler<I, O>): void {
-        this.unsafeRegister(`/exec/${action}`, inputSchema, false, handler);
-    }
-
-    public registerPrivate<
-        ISchema extends TSchema,
-        O extends AppserverData,
-        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
-    >(
-        action: string,
-        inputSchema: ISchema,
-        handler: AppserverPrivateHandler<I, U, O>): void {
-        this.unsafeRegister(
-            `/exec/${action}`,
-            inputSchema,
-            true,
-            (input, user) => {
-                if (user === null)
-                    throw new AppserverAuthError();
-
-                return handler(input as I, user);
-            }
-        );
-    }
-
-    private unsafeRegister<
-        ISchema extends TSchema,
-        O extends AppserverData,
-        I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData,
-    >(
-        action: string,
-        inputSchema: ISchema,
-        auth: boolean,
-        handler: AppserverPublicHandler<I, O> | AppserverPrivateHandler<I, U, O>): void {
-        if (this.registered.has(action))
-            throw new Error(`Action ${action} is already registered`);
-        this.registered.add(action)
-
-        this.app.post(action, express.raw({
-            type: 'application/vnd.msgpack',
-            limit: '2gb'
-        }), async (req, res) => {
-            const { status, data } = await (async () => {
-                try {
-                    const { data: unsafeData, user } = await this.parseInput<I>(req);
-
-                    if (auth && user === null)
-                        return {
-                            status: 401,
-                            data: { error: 'Authentication required', code: 'AUTHENTICATION_REQUIRED' }
-                        };
-
-                    if (!Value.Check(inputSchema, unsafeData))
-                        return {
-                            status: 422,
-                            data: {
-                                errors: [...Value.Errors(inputSchema, unsafeData)],
-                                received: unsafeData
-                            }
-                        }
-
-                    return {
-                        status: 200,
-                        data: await handler(unsafeData as I, user as U)
-                    }
-
-                } catch (e) {
-                    if (e instanceof AppserverError)
-                        return {
-                            status: e.status,
-                            data: { error: e.message, code: e.code, payload: e.payload }
-                        };
-
-                    console.log("Unhandled server error:", e);
-                    return {
-                        status: 500,
-                        data: { error: 'Internal server error', code: 'INTERNAL_SERVERERROR' }
-                    };
-                }
-            })();
-
+    const dispatch = async (req: express.Request, res: express.Response) => {
+        const respond = (status: number, data: AppserverData) => {
             res
                 .status(status)
                 .send(encode(data));
-        });
-    }
+        };
+
+        try {
+            if (req.headers['content-type'] !== 'application/vnd.msgpack')
+                throw new AppserverError('REQUEST_INVALID_TYPE_HEADER', 'Content-Type must be a messagepack (application/vnd.msgpack)', 400);
+
+            const parsed = (() => {
+                try {
+                    return decode(req.body);
+                } catch (e) {
+                    throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', 400);
+                }
+            })() as AppserverData;
+
+            const { action, payload } = parsed as Record<string, AppserverData>;
+
+            if (typeof action !== 'string')
+                return respond(400, { error: 'Missing action field', code: 'REQUEST_INVALID_ACTION' });
+
+            const mod = registry.get(action);
+            if (mod === undefined)
+                return respond(404, { error: `Action not found: ${action}`, code: 'ACTION_NOT_FOUND' });
+
+            const token = req.headers['authorization']?.startsWith('Bearer ') ? req.headers['authorization'].slice(7) : undefined;
+
+            if (!Value.Check(mod.schema, payload))
+                return respond(422, { errors: [...Value.Errors(mod.schema, payload)], received: payload });
+
+            return respond(200, await mod.handler(payload, token));
+
+        } catch (e) {
+            if (e instanceof AppserverError)
+                return respond(e.status, { error: e.message, code: e.code, payload: e.payload });
+
+            console.error("Unhandled server error:", e);
+            return respond(500, { error: 'Internal server error', code: 'INTERNAL_SERVERERROR' });
+        }
+    };
+
+    return { register, dispatch };
 }
