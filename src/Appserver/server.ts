@@ -3,6 +3,7 @@ import { Static, TSchema } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import express from 'express';
 import { readdir } from "fs/promises";
+import path from "path";
 import { AppserverData } from './common';
 export type { AppserverData };
 
@@ -55,19 +56,33 @@ export class AppserverDispatcher {
     }
 
     public async autoload(base: string): Promise<void> {
-        const files = await readdir(base, {
+        const absBase = path.resolve(base);
+        const files = await readdir(absBase, {
             recursive: true,
             withFileTypes: true
         });
 
         for (const entry of files) {
-            if (entry.isFile() && entry.name.endsWith('.js')) {
-                const mod = await import(entry.name);
-                if (typeof mod.handler !== 'function' || !mod.schema)
-                    throw new Error(`Module "${entry.name}" must conform to the AppserverModule interface`);
+            if (!entry.isFile() || !entry.name.endsWith('.js'))
+                continue;
 
-                this.register(entry.name.replace('.js', ''), mod as AppserverModule<TSchema>);
-            }
+            const fullPath = path.join(entry.parentPath, entry.name);
+
+            const action = path
+                .relative(absBase, fullPath)
+                .replace(/\.js$/, '')
+                .split(path.sep)
+                .join('/');
+
+            const ACTION_REGEX = /^([a-z0-9]+\/)*[a-z0-9]+$/;
+            if (!ACTION_REGEX.test(action))
+                throw new Error(`Invalid module path "${action}" — all segments must be lowercase alphanumeric`);
+
+            const mod = await import(fullPath);
+            if (!mod.default || typeof mod.default.handler !== 'function' || !mod.default.schema)
+                throw new Error(`Module "${fullPath}" must have a default export satisfying ApiModule`);
+
+            this.register(action, mod.default);
         }
     }
 
