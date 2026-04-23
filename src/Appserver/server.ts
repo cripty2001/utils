@@ -1,7 +1,8 @@
 import { decode, encode } from "@msgpack/msgpack";
 import { Static, TSchema } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
-import type express from 'express';
+import express from 'express';
+import { readdir } from "fs/promises";
 import { AppserverData } from './common';
 export type { AppserverData };
 
@@ -43,19 +44,43 @@ export type AppserverModule<
     handler: AppserverHandler<I, O>;
 };
 
-export function createDispatch(): {
-    register: <ISchema extends TSchema>(action: string, mod: AppserverModule<ISchema>) => void;
-    dispatch: (req: express.Request, res: express.Response) => Promise<void>;
-} {
-    const registry = new Map<string, AppserverModule>();
+export class AppserverDispatcher {
+    private registry = new Map<string, AppserverModule>();
 
-    function register<ISchema extends TSchema>(action: string, mod: AppserverModule<ISchema>): void {
-        if (registry.has(action))
+    public register(action: string, mod: AppserverModule): void {
+        if (this.registry.has(action))
             throw new Error(`Action already registered: "${action}"`);
-        registry.set(action, mod as AppserverModule);
+
+        this.registry.set(action, mod);
     }
 
-    const dispatch = async (req: express.Request, res: express.Response) => {
+    public async autoload(base: string): Promise<void> {
+        const files = await readdir(base, {
+            recursive: true,
+            withFileTypes: true
+        });
+
+        for (const entry of files) {
+            if (entry.isFile() && entry.name.endsWith('.js')) {
+                const mod = await import(entry.name);
+                if (typeof mod.handler !== 'function' || !mod.schema)
+                    throw new Error(`Module "${entry.name}" must conform to the AppserverModule interface`);
+
+                this.register(entry.name.replace('.js', ''), mod as AppserverModule<TSchema>);
+            }
+        }
+    }
+
+    public bind(app: express.Express, path: string): void {
+        app.post(path, express.raw({
+            type: 'application/vnd.msgpack',
+            limit: '2gb'
+        }), async (req, res) => {
+            await this.dispatch(req, res);
+        });
+    }
+
+    private async dispatch(req: express.Request, res: express.Response): Promise<void> {
         const respond = (status: number, data: AppserverData) => {
             res
                 .status(status)
@@ -79,7 +104,7 @@ export function createDispatch(): {
             if (typeof action !== 'string')
                 throw new AppserverError("REQUEST_INVALID_ACTION", "Missing action field", 400);
 
-            const mod = registry.get(action);
+            const mod = this.registry.get(action);
             if (mod === undefined)
                 throw new AppserverError("ACTION_NOT_FOUND", `Action not found: ${action}`, 404);
 
@@ -94,8 +119,8 @@ export function createDispatch(): {
                 });
 
             return respond(200, await mod.handler(payload, token));
-
-        } catch (e) {
+        }
+        catch (e) {
             if (e instanceof AppserverError)
                 return respond(e.status, {
                     error: e.message,
@@ -109,7 +134,5 @@ export function createDispatch(): {
                 code: 'INTERNAL_SERVERERROR'
             });
         }
-    };
-
-    return { register, dispatch };
+    }
 }
