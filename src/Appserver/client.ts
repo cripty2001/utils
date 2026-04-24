@@ -68,6 +68,7 @@ export class Client {
     public async exec<I extends AppserverData, O extends AppserverData>(
         action: string,
         input: I,
+        onError: Record<string, (payload: AppserverData) => Promise<void>> = {},
     ): Promise<O> {
         while (true) {
             try {
@@ -75,8 +76,17 @@ export class Client {
             } catch (e) {
                 if (e instanceof ClientAuthError) {
                     this.logout();
+                    await this.token.load();
+                    continue;
                 }
-                await this.token.load();
+
+                if (e instanceof ClientServerError) {
+                    const handler = onError[e.code];
+                    if (handler) {
+                        await handler(e.payload);
+                    }
+                }
+                throw e;
             }
         }
     }
