@@ -112,24 +112,24 @@ export class AppserverDispatcher {
 
         try {
             if (req.headers['content-type'] !== 'application/vnd.msgpack')
-                throw new AppserverError('REQUEST_INVALID_TYPE_HEADER', 'Content-Type must be a messagepack (application/vnd.msgpack)', 400);
+                throw new AppserverError('REQUEST_INVALID_TYPE_HEADER', 'Content-Type must be a messagepack (application/vnd.msgpack)', {}, 400);
 
             const parsed = (() => {
                 try {
                     return decode(req.body);
                 } catch (e) {
-                    throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', 400);
+                    throw new AppserverError('REQUEST_INVALID_BODY', 'Request body is not valid msgpack', {}, 400);
                 }
             })() as AppserverData;
 
             const { action, payload } = parsed as Record<string, AppserverData>;
 
             if (typeof action !== 'string')
-                throw new AppserverError("REQUEST_INVALID_ACTION", "Missing action field", 400);
+                throw new AppserverError("REQUEST_INVALID_ACTION", "Missing action field", {}, 400);
 
             const mod = this.registry.get(action);
             if (mod === undefined)
-                throw new AppserverError("ACTION_NOT_FOUND", `Action not found: ${action}`, 404);
+                throw new AppserverError("ACTION_NOT_FOUND", `Action not found: ${action}`, {}, 404);
 
             const token = req.headers['authorization']?.startsWith('Bearer ') ?
                 req.headers['authorization'].slice(7) :
