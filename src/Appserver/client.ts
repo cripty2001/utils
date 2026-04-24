@@ -23,7 +23,7 @@ export class ClientAuthError extends ClientError {
         super(message);
     }
 }
-export class ClientServerError extends Error {
+export class ClientServerError extends ClientError {
     constructor(public code: string, message: string, public payload: AppserverData = {}) {
         super(message);
     }
@@ -66,6 +66,22 @@ export class Client {
     }
 
     public async exec<I extends AppserverData, O extends AppserverData>(
+        action: string,
+        input: I,
+    ): Promise<O> {
+        while (true) {
+            try {
+                return await this.unsafeExec(action, input);
+            } catch (e) {
+                if (e instanceof ClientAuthError) {
+                    this.logout();
+                }
+                await this.token.load();
+            }
+        }
+    }
+
+    private async unsafeExec<I extends AppserverData, O extends AppserverData>(
         action: string,
         input: I,
     ): Promise<O> {
