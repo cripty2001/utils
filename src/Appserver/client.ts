@@ -1,9 +1,12 @@
 import { Whispr, WhisprSetter } from "@cripty2001/whispr";
 import { decode, encode } from "@msgpack/msgpack";
-import { Dispatcher } from "../Dispatcher";
 import { AppserverData } from "./common";
 
 export type { AppserverData };
+
+export type ClientCreateOptions = {
+    rpcMount: string;
+};
 
 export class ClientError extends Error {
     constructor(message: string) {
@@ -12,120 +15,111 @@ export class ClientError extends Error {
 }
 
 export class ClientAuthError extends ClientError {
-    constructor() {
-        super("Authentication error");
+    constructor(
+        public readonly code: string = "PERMISSION_DENIED",
+        message: string = "Permission denied",
+        public readonly payload: AppserverData = {},
+    ) {
+        super(message);
     }
 }
-
 export class ClientServerError extends Error {
     constructor(public code: string, message: string, public payload: AppserverData = {}) {
         super(message);
     }
 }
-
 export class ClientValidationError extends ClientError {
-    constructor(public errors: any[]) {
+    constructor(public errors: unknown) {
         super("Validation Error");
     }
 }
 
-
 export class Client {
-    private authToken: Whispr<string | null>;
-    private setAuthToken: WhisprSetter<string | null>;
-    public user: Dispatcher<string | null, AppserverData | null>;
+    private readonly token: Whispr<string | null>;
+    private readonly setToken: WhisprSetter<string | null>;
+    public readonly loggedIn: Whispr<boolean>;
 
-    private constructor(private url: string) {
-        const [_authToken, _setAuthToken] = Whispr.create<string | null>(null);
-        this.authToken = _authToken;
-
-        this.setAuthToken = (t: string | null) => {
-            if (t === this.authToken.value)
-                return true;
-            return _setAuthToken(t);
-        };
-
-        this.user = new Dispatcher(this.authToken, async (token) => {
-            if (token === null)
-                return null;
-
-            const { user } = await this.unsafeExec<{}, { user: AppserverData | null }>('/auth/whoami', {});
-
-            return user;
-        }, 0);  // Sync execution
+    private constructor(
+        private url: string,
+        private readonly rpcMount: string,
+    ) {
+        const [token, setToken] = Whispr.create<string | null>(null);
+        this.token = token;
+        this.setToken = setToken;
+        this.loggedIn = token.transform((t) => t !== null);
     }
 
-    public static create(url: string): Client {
-        return new Client(url);
+    public static create(url: string, options: ClientCreateOptions): Client {
+        const m = options.rpcMount.startsWith("/") ?
+            options.rpcMount :
+            `/${options.rpcMount}`;
+        return new Client(url, m);
     }
 
     public async login(token: string): Promise<boolean> {
-        this.setAuthToken(token);
-        return await this.user.data.wait(data => {
-            if (data.loading)
-                return;
+        this.setToken(token);
+        return true;
+    }
 
-            return data.ok
-        });
+    public logout(): void {
+        this.setToken(null);
     }
 
     public async exec<I extends AppserverData, O extends AppserverData>(
         action: string,
-        input: I
+        input: I,
     ): Promise<O> {
-        return await this.unsafeExec<I, O>(`/exec/${action}`, input)
-            .catch(e => {
-                if (e instanceof ClientAuthError) {
-                    this.setAuthToken(null);
-                }
-                throw e;
-            });
-    }
+        const testedToken = this.token.value;
+        const actionKey = action;
+        const wireBody = {
+            action: actionKey,
+            payload: input as AppserverData,
+        };
 
-    /**
-     * Executes an action on the server without invalidating the auth token on auth errors.
-     * @param action - The action to execute
-     * @param input - The input to the action
-     * @returns The result of the action
-     */
-    private async unsafeExec<I extends AppserverData, O extends AppserverData>(
-        action: string,
-        input: I
-    ): Promise<O> {
-        const testedToken = this.authToken.value
-
-        const res = await fetch(`${this.url}${action}`, {
+        const res = await fetch(`${this.url}${this.rpcMount}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/vnd.msgpack",
-                ...(testedToken !== null ? { "Authorization": `Bearer ${testedToken}` } : {}),
+                ...(testedToken !== null ? { Authorization: `Bearer ${testedToken}` } : {}),
             },
-            body: new Blob(
-                [new Uint8Array(
-                    encode(input)
-                )],
-                { type: 'application/msgpack' }
-            ),
+            body: new Uint8Array(encode(wireBody)),
         });
 
-        if (res.status === 401 || res.status === 403)
-            throw new ClientError("Permission denied");
+        const buf = await res.arrayBuffer();
 
-        if (res.status === 404)
-            throw new ClientError("Not found");
-
-        const decoded = decode(await res.arrayBuffer());
-        let responseData;
+        const decoded = decode(buf);
 
         if (res.status === 200)
             return decoded as O;
+
         if (res.status === 422) {
-            responseData = decoded as { errors: any[] };
-            throw new ClientValidationError(responseData.errors);
+            const data = decoded as {
+                errors: string;
+                received: AppserverData;
+            }
+            throw new ClientValidationError(data.errors);
         }
-        if (res.status === 400 || res.status === 500) {
-            responseData = decoded as { error: string; code: string; payload: AppserverData; };
-            throw new ClientServerError(responseData.code, responseData.error, responseData.payload);
+
+        const genericError = decoded as {
+            error: string;
+            code: string;
+            payload: AppserverData;
+        }
+        if (res.status === 400 || res.status === 404 || res.status === 500) {
+            throw new ClientServerError(
+                genericError.code,
+                genericError.error,
+                genericError.payload ?? {},
+            );
+        }
+
+        if (res.status === 401 || res.status === 403) {
+            this.setToken(null);
+            throw new ClientAuthError(
+                genericError.code,
+                genericError.error,
+                genericError.payload,
+            )
         }
 
         throw new ClientError(`Unexpected server response: ${res.status}`);
