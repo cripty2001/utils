@@ -94,6 +94,9 @@ The autoloader checks `mod.default.handler` (must be a function) and `mod.defaul
 - Always `Type.Object({ ... })` at the top level, even for empty inputs (`Type.Object({})`). Never a bare string, number, or array at the top.
 - Export the schema constant so clients can import it.
 - The handler's `input` parameter is typed automatically from the schema. Do not annotate it manually.
+- Internally the input type is modeled as `Static<typeof schema> & AppserverData`:
+  - `Static<typeof schema>` gives you the TypeScript type derived from the TypeBox schema.
+  - `& AppserverData` ensures that whatever the schema describes is also representable on the wire (msgpack-safe / JSON-like: primitives, arrays, objects, `Uint8Array`, `null`).
 - Validation runs before the handler. Invalid input returns `422` with TypeBox errors. Your handler never sees malformed data. Validate semantics only (e.g. "does this ID exist") — not shape.
 
 ### Output — inferred, no schema

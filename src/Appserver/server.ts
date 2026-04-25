@@ -46,9 +46,12 @@ export type AppserverModule<
 };
 
 export class AppserverDispatcher {
-    private registry = new Map<string, AppserverModule>();
+    private registry = new Map<string, AppserverModule<any, any, any>>();
 
-    public register(action: string, mod: AppserverModule): void {
+    public register<ISchema extends TSchema, O extends AppserverData, I extends Static<ISchema> & AppserverData = Static<ISchema> & AppserverData>(
+        action: string,
+        mod: AppserverModule<ISchema, O, I>,
+    ): void {
         if (this.registry.has(action))
             throw new Error(`Action already registered: "${action}"`);
 
