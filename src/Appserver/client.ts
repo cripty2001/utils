@@ -36,7 +36,12 @@ type ClientValidationErrorError = {
 export class ClientValidationError extends ClientError {
     public readonly errors: ClientValidationErrorError[];
     constructor(errors: ClientValidationErrorError[]) {
-        super("Validation Error");
+        const first = errors[0] ?? {
+            path: "Internal Error",
+            message: "",
+            value: undefined,
+        };
+        super(`[Validation Error] ${first.path}: ${first.message}`);
         this.errors = errors;
     }
 }
