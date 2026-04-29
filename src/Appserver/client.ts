@@ -127,7 +127,7 @@ export class Client {
 
         if (res.status === 422) {
             const data = decoded as {
-                errors: string;
+                errors: ClientValidationErrorError[];
                 received: AppserverData;
             }
             throw new ClientValidationError(data.errors);
