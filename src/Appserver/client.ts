@@ -28,9 +28,16 @@ export class ClientServerError extends ClientError {
         super(message);
     }
 }
+type ClientValidationErrorError = {
+    path: string;
+    message: string;
+    value: unknown;
+}
 export class ClientValidationError extends ClientError {
-    constructor(public errors: unknown) {
+    public readonly errors: ClientValidationErrorError[];
+    constructor(errors: ClientValidationErrorError[]) {
         super("Validation Error");
+        this.errors = errors;
     }
 }
 
