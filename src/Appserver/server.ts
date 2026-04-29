@@ -140,13 +140,12 @@ export class AppserverDispatcher {
 
             if (!Value.Check(mod.schema, payload))
                 return respond(422, {
-                    errors: JSON.stringify([...Value.Errors(mod.schema, payload)]
+                    errors: [...Value.Errors(mod.schema, payload)]
                         .map(e => ({
                             path: e.path,
                             message: e.message,
-                            value: e.value,
-                        }))
-                    ),
+                            value: e.value as AppserverData,
+                        })),
                     received: payload as AppserverData,
                 });
 
