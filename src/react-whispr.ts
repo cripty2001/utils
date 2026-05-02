@@ -564,13 +564,6 @@ export function whisprFromExternal<T>(
     getData: () => T,
     interval: number | null,
 ): WhisprFromExternalResult<T> {
-    const intervalRef = (() => {
-        return interval !== null ?
-            setInterval(() => {
-                setValue(getData());
-            }, interval) :
-            null;
-    })()
     const cleanup = () => {
         if (intervalRef !== null) {
             clearInterval(intervalRef);
@@ -578,6 +571,13 @@ export function whisprFromExternal<T>(
     }
     const [value, setValue] = Whispr.create(getData(), cleanup);
 
+    const intervalRef = (() => {
+        return interval !== null ?
+            setInterval(() => {
+                setValue(getData());
+            }, interval) :
+            null;
+    })()
     return {
         data: value,
         refresh: () => setValue(getData()),
