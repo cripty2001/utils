@@ -21,7 +21,10 @@ export default function Button({ onClick, children, className }: ButtonProps) {
                 await p
             }
         })()
-            .catch(e => setError(e instanceof Error ? e.message : "Unknown error"))
+            .catch(e => {
+                console.trace("Caught error in button", e)
+                setError(e instanceof Error ? e.message : "Unknown error")
+            })
             .finally(() => setLoading(false))
     }
     return (
