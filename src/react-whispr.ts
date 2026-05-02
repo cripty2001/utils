@@ -528,3 +528,50 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
         result,
     ];
 }
+
+/**
+ * Creates a Whispr from an external (non-reactive) data source.
+ *
+ * Unlike `Whispr.from`, which derives state from other Whisprs, this function
+ * bridges an arbitrary data generator into Whispr's reactive system — useful
+ * when your source of truth lives outside the Whispr graph (e.g. a DOM API,
+ * a global store, or a plain function).
+ *
+ * @param getData - A function that returns the current value of the external source.
+ *                  Called once immediately to seed the Whispr, then on every refresh.
+ * @param interval - If provided, the Whispr will automatically re-poll `getData`
+ *                   every `interval` milliseconds. Pass `null` to disable auto-refresh.
+ * @returns A tuple of:
+ *   - The resulting `Whispr<T>`, seeded with the initial value from `getData`.
+ *   - A `refresh` function that manually re-reads `getData` and pushes the new
+ *     value into the Whispr. Hook this wherever you have a hint that the
+ *     external source may have changed.
+ *
+ * @example
+ * const [windowSize, refreshSize] = whisprFromExternal(
+ *   () => ({ width: window.innerWidth, height: window.innerHeight }),
+ *   null,
+ * );
+ *
+ * window.addEventListener("resize", refreshSize);
+ */
+function whisprFromExternal<T>(
+    getData: () => T,
+    interval: number | null,
+): [Whispr<T>, () => void] {
+    const intervalRef = (() => {
+        return interval !== null ?
+            setInterval(() => {
+                setValue(getData());
+            }, interval) :
+            null;
+    })()
+    const cleanup = () => {
+        if (intervalRef !== null) {
+            clearInterval(intervalRef);
+        }
+    }
+    const [value, setValue] = Whispr.create(getData(), cleanup);
+
+    return [value, () => setValue(getData())];
+}
