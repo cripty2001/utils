@@ -555,7 +555,7 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
  *
  * window.addEventListener("resize", refreshSize);
  */
-function whisprFromExternal<T>(
+export function whisprFromExternal<T>(
     getData: () => T,
     interval: number | null,
 ): [Whispr<T>, () => void] {
