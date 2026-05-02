@@ -3,7 +3,7 @@ import { useState } from "react";
 
 
 export type ButtonProps = {
-    onClick: () => void | Promise<void>
+    onClick: () => unknown | Promise<unknown>
     children: React.ReactElement
     className?: string
 }
