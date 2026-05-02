@@ -131,6 +131,29 @@ handler: async (input, auth) => {
 }
 ```
 
+### [Example] Recommended OIDC integration pattern (oidc-spa)
+
+`Client` deliberately doesn't fetch or refresh tokens — that's the OIDC library's job. To stay logged in indefinitely, **proactively** push fresh tokens into the Client whenever your OIDC library renews them, then bind a UI overlay to `client.loggedIn` for the unrecoverable case.
+
+Two-line proactive renewal (using `oidc-spa`):
+
+```ts
+const oidc = await createOidc({ /* … */ });
+
+if (oidc.isUserLoggedIn) {
+    const { idToken } = await oidc.getTokens();
+    await client.login(idToken);
+
+    // Re-push every time the underlying library refreshes the session.
+    oidc.subscribeToTokensChange(({ idToken }) => {
+        void client.login(idToken);
+    });
+}
+
+```
+
+This works because Client logged in status only changes when an api report an auth error, this mean that as long as the latest set token is valid, the api will never report an auth error.
+
 ---
 
 ## 7. Error handling
