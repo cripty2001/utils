@@ -541,24 +541,29 @@ export function useAsyncInput<C extends Record<string, JSONEncodable>, R extends
  *                  Called once immediately to seed the Whispr, then on every refresh.
  * @param interval - If provided, the Whispr will automatically re-poll `getData`
  *                   every `interval` milliseconds. Pass `null` to disable auto-refresh.
- * @returns A tuple of:
- *   - The resulting `Whispr<T>`, seeded with the initial value from `getData`.
- *   - A `refresh` function that manually re-reads `getData` and pushes the new
+ * @returns An object with:
+ *   - `data`: The resulting `Whispr<T>`, seeded with the initial value from `getData`.
+ *   - `refresh`: A function that manually re-reads `getData` and pushes the new
  *     value into the Whispr. Hook this wherever you have a hint that the
  *     external source may have changed.
  *
  * @example
- * const [windowSize, refreshSize] = whisprFromExternal(
+ * const { data: windowSize, refresh: refreshSize } = whisprFromExternal(
  *   () => ({ width: window.innerWidth, height: window.innerHeight }),
  *   null,
  * );
  *
  * window.addEventListener("resize", refreshSize);
  */
+export type WhisprFromExternalResult<T> = {
+    data: Whispr<T>;
+    refresh: () => void;
+};
+
 export function whisprFromExternal<T>(
     getData: () => T,
     interval: number | null,
-): [Whispr<T>, () => void] {
+): WhisprFromExternalResult<T> {
     const intervalRef = (() => {
         return interval !== null ?
             setInterval(() => {
@@ -573,5 +578,8 @@ export function whisprFromExternal<T>(
     }
     const [value, setValue] = Whispr.create(getData(), cleanup);
 
-    return [value, () => setValue(getData())];
+    return {
+        data: value,
+        refresh: () => setValue(getData()),
+    };
 }
