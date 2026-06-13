@@ -6,9 +6,10 @@ export type ButtonProps = {
     onClick: () => unknown | Promise<unknown>
     children: React.ReactElement
     className?: string
+    onError?: (error: unknown) => void
 }
 
-export default function Button({ onClick, children, className }: ButtonProps) {
+export default function Button({ onClick, children, className, onError }: ButtonProps) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const handleClick = async () => {
@@ -23,7 +24,9 @@ export default function Button({ onClick, children, className }: ButtonProps) {
         })()
             .catch(e => {
                 console.trace("Caught error in button", e)
-                setError(e instanceof Error ? e.message : "Unknown error")
+                const handleError = onError
+                    ?? ((err: unknown) => setError(err instanceof Error ? err.message : "Unknown error"));
+                handleError(e);
             })
             .finally(() => setLoading(false))
     }
