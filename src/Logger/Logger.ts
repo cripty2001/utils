@@ -11,22 +11,32 @@ export type LoggerItem = {
     trace: string | undefined
 }
 
+const AUTO_DISMISS_MS: Record<LoggerItem["severity"], number> = {
+    success: 5000,
+    info: 5000,
+    warning: 6000,
+    error: 8000,
+};
+
 class Logger {
     private static instance: Logger;
 
     public lines: Whispr<LoggerItem[]>;
     private setLines: (errors: LoggerItem[]) => void;
+    private readonly dismissTimers = new Map<string, number>();
 
     private constructor() {
         [this.lines, this.setLines] = Whispr.create<LoggerItem[]>([]);
 
-        window.addEventListener("unhandledrejection", (e) => this.log(e.reason, "error"))
-        window.addEventListener("error", (e: any) => this.logError(this.reconstructError(e)));
+        if (typeof window !== "undefined") {
+            window.addEventListener("unhandledrejection", (e) => this.log(e.reason, "error"));
+            window.addEventListener("error", (e: ErrorEvent) => this.logError(this.reconstructError(e)));
+        }
     }
 
-    private reconstructError(e: any): Error {
+    private reconstructError(e: ErrorEvent): Error {
         if (e.error && e.error instanceof Error) {
-            return e.error
+            return e.error;
         }
         if (e.message && typeof e.message === 'string') {
             return new Error(e.message);
@@ -42,27 +52,39 @@ class Logger {
         return Logger.instance;
     }
 
+    private removeItem(id: string): void {
+        const timer = this.dismissTimers.get(id);
+        if (timer !== undefined) {
+            clearTimeout(timer);
+            this.dismissTimers.delete(id);
+        }
+        this.setLines(this.lines.value.filter((i) => i.id !== id));
+    }
+
     public log(message: string, severity: LoggerItem['severity'] = "info", context?: string) {
+        const id = getRandomId();
         const item: LoggerItem = {
-            id: getRandomId(),
+            id,
             date: new Date(),
             message,
             severity,
             context,
-            dismiss: () => {
-                this.setLines(this.lines.value.filter(i => i.id !== item.id));
-            },
-            trace: (new Error()).stack
+            dismiss: () => this.removeItem(id),
+            trace: (new Error()).stack,
         };
 
         this.setLines([...this.lines.value, item]);
+
+        if (typeof window !== "undefined") {
+            const timer = window.setTimeout(() => item.dismiss(), AUTO_DISMISS_MS[severity]);
+            this.dismissTimers.set(id, timer);
+        }
     }
 
-    public logError(error: Error | DOMException | any) {
+    public logError(error: Error | DOMException | unknown) {
         if (
             error instanceof DOMException ||
-            error instanceof Error ||
-            false
+            error instanceof Error
         ) {
             return this.log(error.message, "error", error.stack);
         }

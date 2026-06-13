@@ -87,9 +87,9 @@
       "require": "./dist/Logger/Logger.js"
     },
     "./logger/react": {
-      "import": "./dist/Logger/react-display.js",
-      "types": "./dist/Logger/react-display.d.ts",
-      "require": "./dist/Logger/react-display.js"
+      "import": "./dist/react/logger-display.js",
+      "types": "./dist/react/logger-display.d.ts",
+      "require": "./dist/react/logger-display.js"
     },
     "./appserver/server": {
       "import": "./dist/Appserver/server.js",
