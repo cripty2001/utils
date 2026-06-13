@@ -18,6 +18,12 @@ const AUTO_DISMISS_MS: Record<LoggerItem["severity"], number> = {
     error: 8000,
 };
 
+const LOGGER_GLOBAL_KEY = "__cripty2001_utils_logger__" as const;
+
+type LoggerGlobal = typeof globalThis & {
+    [LOGGER_GLOBAL_KEY]?: Logger;
+};
+
 class Logger {
     private static instance: Logger;
 
@@ -46,9 +52,17 @@ class Logger {
     }
 
     public static getInstance(): Logger {
+        const g = globalThis as LoggerGlobal;
+        if (g[LOGGER_GLOBAL_KEY]) {
+            Logger.instance = g[LOGGER_GLOBAL_KEY];
+            return g[LOGGER_GLOBAL_KEY];
+        }
+
         if (!Logger.instance) {
             Logger.instance = new Logger();
         }
+
+        g[LOGGER_GLOBAL_KEY] = Logger.instance;
         return Logger.instance;
     }
 
