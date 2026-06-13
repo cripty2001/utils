@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
 const slideUpKeyframes = `
 @keyframes slide-up {
@@ -22,20 +22,48 @@ if (typeof document !== 'undefined') {
     }
 }
 
+export type ModalActions = {
+    dismiss: () => void;
+};
+
+export type ModalContent = ReactNode | ((actions: ModalActions) => ReactNode);
+
 export type ModalComponentProps = {
-    children: React.ReactNode,
-    open: boolean,
-    setOpen: (open: boolean) => void,
-    animate: boolean
-}
+    children: ModalContent;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    animate?: boolean;
+    panelClassName?: string;
+};
 
-let modalCount = 0
+let modalCount = 0;
 
-export default function ModalComponent(props: ModalComponentProps) {
+export default function ModalComponent({
+    children,
+    open,
+    setOpen,
+    animate = false,
+    panelClassName = "",
+}: ModalComponentProps) {
     const zIndex = useRef(1000 + modalCount++).current;
     const id = useRef(`modal-${zIndex}`).current;
 
-    if (!props.open) return null;
+    const dismiss = useCallback(() => setOpen(false), [setOpen]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === "Escape") dismiss();
+        };
+
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [open, dismiss]);
+
+    if (!open) return null;
+
+    const content = typeof children === "function" ? children({ dismiss }) : children;
 
     return (
         <div
@@ -53,16 +81,19 @@ export default function ModalComponent(props: ModalComponentProps) {
                 padding: '1.5rem',
                 height: '100vh',
                 width: '100vw',
-                zIndex: zIndex
+                zIndex: zIndex,
             }}
-            onClick={() => props.setOpen(false)}
+            onClick={dismiss}
         >
             <div
-                style={{ maxWidth: '100%', animation: props.animate ? 'slide-up 0.3s ease-out': '' }}
+                role="dialog"
+                aria-modal="true"
+                className={panelClassName}
+                style={{ maxWidth: '100%', animation: animate ? 'slide-up 0.3s ease-out' : undefined }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {props.children}
+                {content}
             </div>
         </div>
-    )
+    );
 }
