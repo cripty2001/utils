@@ -55,7 +55,7 @@ export class Client {
         private url: string,
         private readonly rpcMount: string,
     ) {
-        const [token, setToken] = Whispr.create<string | null>(null);
+        const [token, setToken] = Whispr.create<string | null>(''); // This will make sure the loggedin only flips to false when there is really an auth rejected. Server will ignore invalid tokens on public apis anyway
         this.token = token;
         this.setToken = setToken;
         this.loggedIn = token.transform((t) => t !== null);
