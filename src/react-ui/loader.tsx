@@ -20,7 +20,7 @@ if (typeof document !== 'undefined') {
 
 export type LoaderProps<T> = {
     data: Dispatcher<unknown, T>
-    children: React.ComponentType<{ data: T }>
+    children: (props: { data: T }) => React.ReactNode;
     loader?: React.ReactNode
 }
 
@@ -36,11 +36,9 @@ export default function Loader<T>(props: LoaderProps<T>) {
 
 function Content<T>({ data, children, loader }: {
     data: DispatcherStatePayload<T>,
-    children: React.ComponentType<{ data: T }>,
+    children: (props: { data: T }) => React.ReactNode,
     loader?: React.ReactNode
 }) {
-    const ChildComponent = children;
-
     if (data.loading)
         return loader ?? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -57,5 +55,5 @@ function Content<T>({ data, children, loader }: {
     if (!data.ok)
         return <div style={{ color: '#ef4444' }}>{data.error.message}</div>
 
-    return <ChildComponent data={data.data} />
+    return children({ data: data.data });
 }
