@@ -12,6 +12,9 @@
   },
   "license": "MIT",
   "author": "Fabio Mauri <cripty2001@outlook.com>",
+  "engines": {
+    "node": ">=22"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -35,7 +38,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/lodash": "^4.17.21",
-    "@types/node": "^24.9.1",
+    "@types/node": "^24.13.3",
     "@types/react": "^19",
     "react": "^19",
     "typescript": "^7.0.2"
