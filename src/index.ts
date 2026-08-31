@@ -251,6 +251,12 @@ export function randBetween(min: number, max: number): number {
     return min + randomBelow(span);
 }
 
+export class GetenvHandledError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 /**
  * Get an environment variable, convert it using the given converter function.
  * If the environment variable is not defined, the default value is used.
@@ -258,7 +264,7 @@ export function randBetween(min: number, max: number): number {
  * 
  * @param key The environment variable key
  * @param defaultValue The default value to use if the environment variable is not defined
- * @param converter The function to use to convert the environment variable value to the desired type
+ * @param converter The function to use to convert the environment variable value to the desired type. If the converter throws a GetenvHandledError, that message is surfaced to the user. Otherwise, a generic error message is thrown.
  * 
  * @returns The converted environment variable value, or the default value if provided
  * 
@@ -279,19 +285,52 @@ export function getEnv<R>(key: string, defaultValue?: R, converter: (string: str
         try {
             return converter(value);
         } catch (e) {
-            throw new Error(`Environment variable ${key} cannot be converted to the desired type.`);
+            const message = e instanceof GetenvHandledError ? `(${e.message})` : "";
+
+            throw new Error(`Environment variable ${key} cannot be converted to the desired type.${message}`);
         }
-    })()
+    })();
 
     return converted;
 }
 
 /**
+ * @see getEnv, returning a string.
+ * 
+ * @param allowEmpty Whether to allow empty strings
+ */
+export function getEnvString(key: string, allowEmpty: boolean = false, defaultValue?: string): string {
+    return getEnv(key, defaultValue, (s) => {
+        if (s === "" && !allowEmpty)
+            throw new GetenvHandledError(`Empty string.`);
+
+        return s;
+    });
+}
+
+/**
  * @see getEnv, with the additional constraint that the environment variable must be a valid integer.
+ * 
+ * @param constraints The constraints (min and max) to apply to the environment variable value
+ * 
  * Note: the default value is not used instead of an invalid integer. An invalid integer therefore throws an error.
  */
-export function getEnvInt(key: string, defaultValue?: number): number {
-    return getEnv(key, defaultValue, (s) => parseInt(s));
+export function getEnvInt(key: string, constraints: { min?: number, max?: number } = {}, defaultValue?: number): number {
+    return getEnv(key, defaultValue, (s) => {
+        const parsed = parseInt(s);
+        if (isNaN(parsed))
+            throw new GetenvHandledError(`Invalid integer.`);
+
+        const MIN = constraints.min ?? Number.MIN_SAFE_INTEGER;
+        if (parsed < MIN)
+            throw new GetenvHandledError(`Less than minimum: ${MIN}.`);
+
+        const MAX = constraints.max ?? Number.MAX_SAFE_INTEGER;
+        if (parsed > MAX)
+            throw new GetenvHandledError(`Greater than maximum: ${MAX}.`);
+
+        return parsed;
+    });
 }
 
 /**
@@ -301,7 +340,11 @@ export function getEnvInt(key: string, defaultValue?: number): number {
  * @param schema The schema to use to validate the environment variable value
  */
 export function getEnvJson<T>(key: string, defaultValue?: T, schema?: TSchema): T {
-    return getEnv(key, defaultValue, (s) => JSON.parse(s));
+    const value = getEnv(key, defaultValue, (s) => JSON.parse(s));
+
+    return schema ?
+        schema.parse(value) :
+        value;
 }
 
 const [currentTsMs, setCurrentTsMs] = Whispr.create<number>(Date.now());
