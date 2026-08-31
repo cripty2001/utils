@@ -1,5 +1,6 @@
 import { Whispr } from "@cripty2001/whispr";
-import type { TSchema } from "@sinclair/typebox";
+import type { Static, TSchema } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
@@ -317,8 +318,11 @@ export function getEnvString(key: string, allowEmpty: boolean = false, defaultVa
  */
 export function getEnvInt(key: string, constraints: { min?: number, max?: number } = {}, defaultValue?: number): number {
     return getEnv(key, defaultValue, (s) => {
-        const parsed = parseInt(s);
-        if (isNaN(parsed))
+        if (!/^[+-]?\d+$/.test(s))
+            throw new GetenvHandledError(`Invalid integer.`);
+
+        const parsed = Number(s);
+        if (!Number.isInteger(parsed))
             throw new GetenvHandledError(`Invalid integer.`);
 
         const MIN = constraints.min ?? Number.MIN_SAFE_INTEGER;
@@ -334,17 +338,28 @@ export function getEnvInt(key: string, constraints: { min?: number, max?: number
 }
 
 /**
- * @see getEnv, with the additional constraint that the environment variable must be a valid JSON object.
- * Note: the default value is not used instead of an invalid JSON object. An invalid JSON object therefore throws an error.
- * 
- * @param schema The schema to use to validate the environment variable value
+ * @see getEnv, with the additional constraint that the environment variable must be valid JSON.
+ * Note: the default value is not used instead of invalid JSON or a schema mismatch. Those therefore throw.
+ *
+ * @param schema Optional TypeBox schema.
  */
-export function getEnvJson<T>(key: string, defaultValue?: T, schema?: TSchema): T {
-    const value = getEnv(key, defaultValue, (s) => JSON.parse(s));
+export function getEnvJson<T>(key: string, defaultValue?: T): T;
+export function getEnvJson<S extends TSchema>(key: string, defaultValue: Static<S> | undefined, schema: S): Static<S>;
+export function getEnvJson(key: string, defaultValue?: unknown, schema?: TSchema): unknown {
+    return getEnv(key, defaultValue, (s) => {
+        const parsed = (() => {
+            try {
+                return JSON.parse(s);
+            } catch {
+                throw new GetenvHandledError(`Invalid JSON.`);
+            }
+        })();
 
-    return schema ?
-        schema.parse(value) :
-        value;
+        if (schema === undefined)
+            return parsed;
+
+        return Value.Parse(schema, parsed);
+    });
 }
 
 const [currentTsMs, setCurrentTsMs] = Whispr.create<number>(Date.now());
