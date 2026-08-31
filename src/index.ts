@@ -217,18 +217,56 @@ export function randBetween(min: number, max: number): number {
 }
 
 /**
- * Get an environment variable, throwing if it is not defined and no default value is provided.
+ * Get an environment variable, convert it using the given converter function.
+ * If the environment variable is not defined, the default value is used.
+ * If the conversion throws an error, the conversion is aborted and an error is thrown. The default value is not used in this case.
+ * 
  * @param key The environment variable key
  * @param defaultValue The default value to use if the environment variable is not defined
- * @returns The environment variable value, or the default value if provided
+ * @param converter The function to use to convert the environment variable value to the desired type
+ * 
+ * @returns The converted environment variable value, or the default value if provided
+ * 
+ * @throws If the environment variable is not defined and no default value is provided
+ * @throws If the conversion throws an error
  */
-export function getEnv(key: string, defaultValue?: string): string {
-    const value = process.env[key] ?? defaultValue;
+export function getEnv<R>(key: string, defaultValue?: R, converter: (string: string) => R = (s) => s as R): R {
+    const value = process.env[key];
 
-    if (value === undefined)
-        throw new Error(`Environment variable ${key} is not defined and no default value was provided.`);
+    if (value === undefined) {
+        if (defaultValue === undefined)
+            throw new Error(`Environment variable ${key} is not defined and no default value was provided.`);
+        else
+            return defaultValue;
+    }
 
-    return value;
+    const converted = (() => {
+        try {
+            return converter(value);
+        } catch (e) {
+            throw new Error(`Environment variable ${key} cannot be converted to the desired type.`);
+        }
+    })()
+
+    return converted;
+}
+
+/**
+ * @see getEnv, with the additional constraint that the environment variable must be a valid integer.
+ * Note: the default value is not used instead of an invalid integer. An invalid integer therefore throws an error.
+ */
+export function getEnvInt(key: string, defaultValue?: number): number {
+    return getEnv(key, defaultValue, (s) => parseInt(s));
+}
+
+/**
+ * @see getEnv, with the additional constraint that the environment variable must be a valid JSON object.
+ * Note: the default value is not used instead of an invalid JSON object. An invalid JSON object therefore throws an error.
+ * 
+ * @param schema The schema to use to validate the environment variable value
+ */
+export function getEnvJson<T>(key: string, defaultValue?: T, schema?: TypeBoxSchema): T {
+    return getEnv(key, defaultValue, (s) => JSON.parse(s));
 }
 
 const [currentTsMs, setCurrentTsMs] = Whispr.create<number>(Date.now());
