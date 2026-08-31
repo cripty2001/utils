@@ -1,4 +1,5 @@
 import { Whispr } from "@cripty2001/whispr";
+import type { TSchema } from "@sinclair/typebox";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
@@ -265,7 +266,7 @@ export function getEnvInt(key: string, defaultValue?: number): number {
  * 
  * @param schema The schema to use to validate the environment variable value
  */
-export function getEnvJson<T>(key: string, defaultValue?: T, schema?: TypeBoxSchema): T {
+export function getEnvJson<T>(key: string, defaultValue?: T, schema?: TSchema): T {
     return getEnv(key, defaultValue, (s) => JSON.parse(s));
 }
 
