@@ -22,6 +22,36 @@ export type AllRequired<T> = T extends ExactlyOne<infer U>
     ? ExactlyOne<Required<U>>
     : never;
 
+const U32_LIMIT = 0x1_0000_0000;
+
+function randomU32(): number {
+    const buf = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(buf);
+    return buf[0]!;
+}
+
+/**
+ * Generate a random number between 0 and `maxExclusive - 1`.
+ * @param maxExclusive The maximum exclusive value to generate
+ * @returns A random number between 0 and `maxExclusive - 1`
+ * @throws If `maxExclusive` is less than 1 or greater than 2^32
+ */
+export function randomBelow(maxExclusive: number): number {
+    const n = Math.floor(maxExclusive);
+    if (n < 1)
+        throw new RangeError(`randomBelow span must be at least 1: ${n}`);
+    if (n > U32_LIMIT)
+        throw new RangeError(`randomBelow span exceeds 2^32: ${n}`);
+
+    const threshold = U32_LIMIT - (U32_LIMIT % n);
+
+    let x = randomU32();
+    while (x >= threshold)
+        x = randomU32();
+
+    return x % n;
+}
+
 /**
  * Generate a random string from the given alphabeth.
  * @param _alphabeth The alphabeth to draw characters from
@@ -32,7 +62,7 @@ export function getRandom(_alphabeth: string, length: number): string {
     const alphabeth = _alphabeth.split("");
     const toReturn: string[] = [];
     while (toReturn.length < length) {
-        toReturn.push(alphabeth[Math.floor(Math.random() * alphabeth.length)]);
+        toReturn.push(alphabeth[randomBelow(alphabeth.length)]);
     }
     return toReturn.join("");
 }
@@ -212,9 +242,13 @@ export function parseQuery(query: string | Record<string, any> | URLSearchParams
  * @param min The minimum allowed number
  * @param max The maximum allowed number
  * @returns The generated random int
+ * @throws If `max - min + 1` is greater than 2^32
  */
 export function randBetween(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    const span = max - min + 1;
+    if (span <= 1)
+        return min;
+    return min + randomBelow(span);
 }
 
 /**
