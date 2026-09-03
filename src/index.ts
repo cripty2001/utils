@@ -1,6 +1,7 @@
 import { Whispr } from "@cripty2001/whispr";
 import type { Static, TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { timingSafeEqual } from "crypto";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
@@ -424,4 +425,11 @@ export function safeApply<T>(updater: (draft: T) => T | void, incoming: T): T {
     const new_data = updater(cloned);
     const chosen = new_data ?? cloned;
     return structuredClone(chosen);
+}
+
+export function timesafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length)
+        return false;
+
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
