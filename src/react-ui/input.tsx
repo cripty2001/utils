@@ -47,11 +47,11 @@ export default function InputComponent<Variants extends InputComponentPropsVaria
             </div>
             <div style={{ position: 'relative' }} className={baseClassName.wrapper}>
                 {props.icon &&
-                    <div style={{ position: 'absolute', left: '0.5rem', top: '0.5rem' }}>
+                    <div style={{ position: 'absolute', top: '0.5rem' }}>
                         {props.icon}
                     </div>
                 }
-                <div style={{ paddingLeft: props.icon ? '2rem' : '0.5rem' }}>
+                <div style={{ paddingLeft: props.icon ? '2rem' : '0' }}>
                     {props.children({
                         value: props.value,
                         setValue: (v) => {
