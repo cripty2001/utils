@@ -456,3 +456,7 @@ export function enforceDigest(data: string, digest: string): void {
     if (!checkDigest(data, digest))
         throw new Error(`The digest does not match the data.`)
 }
+
+export function isDigest(digest: string): boolean {
+    return digest.startsWith(DIGEST_PREFIX) && digest.length === DIGEST_PREFIX.length + 43;
+}
