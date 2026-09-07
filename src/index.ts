@@ -436,23 +436,25 @@ export function timesafeEqual(a: string, b: string): boolean {
 
 
 const DIGEST_PREFIX = 'sha256.base64url.';
-export function builddigest(data: string): string {
+export function buildDigest(data: string | Buffer): string {
+    const encoded = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+
     const hash = createHash('sha256')
-        .update(new TextEncoder().encode(data))
+        .update(encoded)
         .digest('base64url');
 
     return `${DIGEST_PREFIX}${hash}`;
 }
 
-export function checkDigest(data: string, digest: string): boolean {
+export function checkDigest(data: string | Buffer, digest: string): boolean {
     if (!digest.startsWith(DIGEST_PREFIX))
         throw new Error(`The digest was not generated with digest() function.`)
 
-    const dataDigest = builddigest(data);
+    const dataDigest = buildDigest(data);
     return timesafeEqual(dataDigest, digest);
 }
 
-export function enforceDigest(data: string, digest: string): void {
+export function enforceDigest(data: string | Buffer, digest: string): void {
     if (!checkDigest(data, digest))
         throw new Error(`The digest does not match the data.`)
 }
