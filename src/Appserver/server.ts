@@ -30,8 +30,8 @@ export class AppserverAuthError extends AppserverError {
     }
 }
 
-export class AppserverHandledError extends AppserverError {
-    constructor(code: string, message: string, payload: AppserverData = {}) {
+export class AppserverHandledError<P extends AppserverData = AppserverData> extends AppserverError<P> {
+    constructor(code: string, message: string, payload: P = {} as P) {
         super(code, message, payload);
     }
 }
