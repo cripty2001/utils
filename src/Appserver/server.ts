@@ -18,8 +18,8 @@ export type AppserverHandler<
     O extends AppserverData,
 > = (input: I, auth: string | undefined) => Promise<O> | O;
 
-class AppserverError extends Error {
-    constructor(public code: string, message: string, public payload: AppserverData = {}, public status = 500) {
+class AppserverError<P extends AppserverData = AppserverData> extends Error {
+    constructor(public code: string, message: string, public payload: P = {} as P, public status = 500) {
         super(message);
     }
 }
