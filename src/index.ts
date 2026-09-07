@@ -1,7 +1,7 @@
 import { Whispr } from "@cripty2001/whispr";
 import type { Static, TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
-import { timingSafeEqual } from "crypto";
+import { createHash, hash, timingSafeEqual } from "crypto";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
@@ -432,4 +432,27 @@ export function timesafeEqual(a: string, b: string): boolean {
         return false;
 
     return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+
+const DIGEST_PREFIX = 'sha256.base64url.';
+export function builddigest(data: string): string {
+    const hash = createHash('sha256')
+        .update(new TextEncoder().encode(data))
+        .digest('base64url');
+
+    return `${DIGEST_PREFIX}${hash}`;
+}
+
+export function checkDigest(data: string, digest: string): boolean {
+    if (!digest.startsWith(DIGEST_PREFIX))
+        throw new Error(`The digest was not generated with digest() function.`)
+
+    const dataDigest = builddigest(data);
+    return timesafeEqual(dataDigest, digest);
+}
+
+export function enforceDigest(data: string, digest: string): void {
+    if (!checkDigest(data, digest))
+        throw new Error(`The digest does not match the data.`)
 }
