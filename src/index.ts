@@ -436,26 +436,27 @@ export function timesafeEqual(a: string, b: string): boolean {
 
 
 const DIGEST_PREFIX = 'sha256.base64url.';
-export function buildDigest(data: string | Buffer): string {
-    const encoded = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+export async function buildDigest(data: string | Uint8Array): Promise<string> {
+    const encoded = typeof data === "string" ? new TextEncoder().encode(data) : data;
+    const hash = await globalThis.crypto.subtle.digest("SHA-256", encoded);
+    const b64url = new Uint8Array(hash).toBase64({
+        alphabet: "base64url",
+        omitPadding: true,
+    });
+    return `${DIGEST_PREFIX}${b64url}`;
 
-    const hash = createHash('sha256')
-        .update(encoded)
-        .digest('base64url');
-
-    return `${DIGEST_PREFIX}${hash}`;
 }
 
-export function checkDigest(data: string | Buffer, digest: string): boolean {
+export async function checkDigest(data: string | Buffer, digest: string): Promise<boolean> {
     if (!digest.startsWith(DIGEST_PREFIX))
         throw new Error(`The digest was not generated with digest() function.`)
 
-    const dataDigest = buildDigest(data);
+    const dataDigest = await buildDigest(data);
     return timesafeEqual(dataDigest, digest);
 }
 
-export function enforceDigest(data: string | Buffer, digest: string): void {
-    if (!checkDigest(data, digest))
+export async function enforceDigest(data: string | Buffer, digest: string): Promise<void> {
+    if (!(await checkDigest(data, digest)))
         throw new Error(`The digest does not match the data.`)
 }
 
