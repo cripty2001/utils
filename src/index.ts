@@ -1,7 +1,7 @@
 import { Whispr } from "@cripty2001/whispr";
 import type { Static, TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
-import { createHash, hash, timingSafeEqual } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { isEqualWith } from "lodash";
 
 export type JSONEncodable = number | string | boolean | JSONEncodable[] | null | { [key: string]: JSONEncodable };
