@@ -14,7 +14,7 @@
             "node"
         ],
         "lib": [
-            "ES2022",
+            "ESNext",
             "DOM"
         ],
         "jsx": "react-jsx"
