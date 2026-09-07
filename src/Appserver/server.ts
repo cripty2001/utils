@@ -10,6 +10,7 @@ export type { AppserverData };
 // Helpful for avoiding sinclair version mismatch between this and the actual user of the package
 export { Static, TSchema, Type } from '@sinclair/typebox';
 export { Value } from '@sinclair/typebox/value';
+export { FormatRegistry } from '@sinclair/typebox';
 
 encode({}); // Fixes issue with msgpack not being included in build
 
