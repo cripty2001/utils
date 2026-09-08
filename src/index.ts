@@ -102,7 +102,7 @@ export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function parseHash(fields: string[]): URLSearchParams {
+export function parseHash(fields: string[], deleteFields: boolean = false): URLSearchParams {
     // Checking empty hash
     if (window.location.hash === "") return new URLSearchParams();
 
@@ -114,7 +114,9 @@ export function parseHash(fields: string[]): URLSearchParams {
     for (const field of fields) {
         if (data.has(field)) {
             toReturn.set(field, data.get(field) as string);
-            data.delete(field);
+            if (deleteFields) {
+                data.delete(field);
+            }
         }
     }
 
