@@ -31,12 +31,9 @@
   "dependencies": {
     "@cripty2001/whispr": "^0.4.1",
     "@sinclair/typebox": "^0.34.41",
-    "cors": "^2.8.6",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
     "@types/lodash": "^4.17.21",
     "@types/node": "^24.13.3",
     "@types/react": "^19",
@@ -44,9 +41,10 @@
     "typescript": "^7.0.2"
   },
   "peerDependencies": {
-    "@msgpack/msgpack": "^3.1.2",
+    "@fastify/type-provider-typebox": "^6.1.0",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1",
+    "fastify": "^5.12.5",
+    "jose": "^6.2.12",
     "lucide-react": ">=0.552.0",
     "react": "^19"
   },
@@ -95,11 +93,6 @@
       "import": "./dist/Appserver/server.js",
       "types": "./dist/Appserver/server.d.ts",
       "require": "./dist/Appserver/server.js"
-    },
-    "./appserver/client": {
-      "import": "./dist/Appserver/client.js",
-      "types": "./dist/Appserver/client.d.ts",
-      "require": "./dist/Appserver/client.js"
     },
     "./react": {
       "import": "./dist/react/index.js",

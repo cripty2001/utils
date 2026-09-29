@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Dispatcher, DispatcherStatePayload } from "../Dispatcher";
 import { useWhisprValue } from "../react-whispr";
+import { useEffect, useMemo, useRef } from "react";
 
 const spinKeyframes = `
 @keyframes spin {
@@ -22,10 +23,25 @@ export type LoaderProps<T> = {
     data: Dispatcher<unknown, T>
     children: (props: { data: T }) => React.ReactNode;
     loader?: React.ReactNode
+    showRefreshing?: boolean
 }
 
 export default function Loader<T>(props: LoaderProps<T>) {
-    const data = useWhisprValue(props.data.data);
+    const prev = useRef<DispatcherStatePayload<T>>({ loading: true, progress: 0 });
+    const state = useWhisprValue(props.data.data);
+    useEffect(() => {
+        prev.current = state;
+    }, [state]);
+
+    const data = useMemo(() => {
+        if (props.showRefreshing)
+            return state;
+
+        if (state.loading && prev.current !== null)
+            return prev.current;
+
+        return state;
+    }, [state.loading, prev.current, props.showRefreshing]);
 
     return (
         <div>
