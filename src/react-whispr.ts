@@ -234,25 +234,32 @@ export function useAsync<I, O>(
  * @param interval The interval to re-execute the async function. If null, the async function will not be re-executed.
  * @param f @see useAsync
  * 
- * @returns @see useAsync
+ * @returns [@see useAsync, A function to trigger a manual refresh]
  */
 export function useAsyncPeriodic<I, O>(
     data: I,
     interval: number,
     f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
-): Dispatcher<any, O> {
+): [Dispatcher<any, O>, () => void] {
     const timer = useClock(interval)
+    const [refresh, setRefresh] = useState(Math.random());
     const bundle = useMemo(() => {
         return {
             data,
-            timer
+            timer,
+            refresh
         }
-    }, [data, timer]);
+    }, [data, timer, refresh]);
 
-    return useAsync(
-        (i, p, s) => f(i.data, p, s),
-        bundle,
-    );
+    return [
+        useAsync(
+            (i, p, s) => f(i.data, p, s),
+            bundle,
+        ),
+        () => {
+            setRefresh(Math.random());
+        }
+    ];
 }
 
 /**
