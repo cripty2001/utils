@@ -174,88 +174,103 @@ export function useSynced<T extends any>(def: T, value: T | undefined, setValue:
     return [v, syncedSetter];
 }
 
-/**
- * Wraps an async function into a reactable data structure that tracks loading state, progress, and results.
- * 
- * **Error Handling:** This function does NOT throw errors. Instead, errors are stored in the returned dispatcher's state.
- * Check the dispatcher's `data` property to access the error state. The dispatcher's promise resolves successfully
- * even when errors occur - errors are captured and stored in the reactive state for UI consumption.
- * 
- * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive.
- * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem. If null, this function will act like an useEffect with an empty dependency array.
- * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed. Not reactive
- * @returns A Dispatcher object containing:
- *   - `data`: A Whispr<DispatcherStatePayload<O>> that contains the loading state, progress, and either the result data or error
- *   - `filtered`: A Whispr<O | null> that contains the result data when successful, or null when loading or on error
- * 
- * @type I Input for the async function.
- * @type O Output for the async function.
- * 
- * @example
- * const dispatcher = useAsync(async (userId) => {
- *   const response = await fetch(`/api/users/${userId}`);
- *   return response.json();
- * }, userId);
- * 
- * const state = useWhisprValue(dispatcher.data);
- * // state can be: { loading: true, progress: 0 } | { loading: false, ok: true, data: T } | { loading: false, ok: false, error: Error }
- * 
- * if (!state.loading && !state.ok) {
- *   console.error('Error:', state.error);
- * }
- */
-export function useAsync<I, O>(
-    f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
-    data: I,
-    debouce: number = 200
-): Dispatcher<any, O> {
-    // Initing reactive input
-    const [input, setInput] = useSafeRef(() => Whispr.create(data ?? getRandomId() as I));
+// /**
+//  * Wraps an async function into a reactable data structure that tracks loading state, progress, and results.
+//  * 
+//  * **Error Handling:** This function does NOT throw errors. Instead, errors are stored in the returned dispatcher's state.
+//  * Check the dispatcher's `data` property to access the error state. The dispatcher's promise resolves successfully
+//  * even when errors occur - errors are captured and stored in the reactive state for UI consumption.
+//  * 
+//  * @param f The async function to call. It should return a promise that resolves to the data. It is not reactive.
+//  * @param data The data to give to f. It must be stable, as anything in the dependency array of the useEffect and similars in the react ecosystem. If null, this function will act like an useEffect with an empty dependency array.
+//  * @param debouce Debounce time in ms. Default to 200ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed. Not reactive
+//  * @returns A Dispatcher object containing:
+//  *   - `data`: A Whispr<DispatcherStatePayload<O>> that contains the loading state, progress, and either the result data or error
+//  *   - `filtered`: A Whispr<O | null> that contains the result data when successful, or null when loading or on error
+//  * 
+//  * @type I Input for the async function.
+//  * @type O Output for the async function.
+//  * 
+//  * @example
+//  * const dispatcher = useAsync(async (userId) => {
+//  *   const response = await fetch(`/api/users/${userId}`);
+//  *   return response.json();
+//  * }, userId);
+//  * 
+//  * const state = useWhisprValue(dispatcher.data);
+//  * // state can be: { loading: true, progress: 0 } | { loading: false, ok: true, data: T } | { loading: false, ok: false, error: Error }
+//  * 
+//  * if (!state.loading && !state.ok) {
+//  *   console.error('Error:', state.error);
+//  * }
+//  */
+// export function useAsync<I, O>(
+//     f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
+//     data: I,
+//     debouce: number = 200
+// ): Dispatcher<any, O> {
+//     // Initing reactive input
+//     const [input, setInput] = useSafeRef(() => Whispr.create(data ?? getRandomId() as I));
 
-    useEffect(() => {
-        if (data !== null) {
-            setInput(data); // Debouncing already handled by dispatcher
-        }
-    }, [data, setInput]);
+//     useEffect(() => {
+//         if (data !== null) {
+//             setInput(data); // Debouncing already handled by dispatcher
+//         }
+//     }, [data, setInput]);
 
-    // Initing dispatcher
-    const dispatcher: Dispatcher<I, O> = useSafeRef(() =>
-        new Dispatcher<I, O>(input, f, debouce)
-    );
+//     // Initing dispatcher
+//     const dispatcher: Dispatcher<I, O> = useSafeRef(() =>
+//         new Dispatcher<I, O>(input, f, debouce)
+//     );
 
-    // Returning dispatcher
-    return dispatcher;
-}
+//     // Returning dispatcher
+//     return dispatcher;
+// }
 
 /**
  * Like useAsync, but it also automatically re-execute the async function periodically
  * 
  * @param data @see useAsync
  * @param interval The interval to re-execute the async function. If null, the async function will not be re-executed.
+ * @param debouce Debounce time in ms. The async function will not be called if this time has not passed since the useAsync first invocation or value change. If another change happens during the wait, the first function call is never executed. Not reactive
  * @param f @see useAsync
  * 
  * @returns [@see useAsync, A function to trigger a manual refresh]
  */
-export function useAsyncPeriodic<I, O>(
+export function useAsync<I, O>(
     data: I,
+    debouce: number,
     interval: number,
     f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
 ): [Dispatcher<any, O>, () => void] {
-    const timer = useClock(interval)
-    const [refresh, setRefresh] = useState(Math.random());
-    const bundle = useMemo(() => {
-        return {
-            data,
-            timer,
-            refresh
+    // Initing reactive input
+    const [input, setInput] = useSafeRef(() => Whispr.create(data ?? getRandomId() as I));
+    useEffect(() => {
+        if (data !== null) {
+            setInput(data); // Debouncing already handled by dispatcher
         }
-    }, [data, timer, refresh]);
+    }, [data, setInput]);
 
-    const dispatcher = useSafeRef(() => useAsync(
-        (i, p, s) => f(i.data, p, s),
-        bundle,
-    ));
+    // Initing refresh bundle
+    const timer = getClock(interval)
+    const [refresh, setRefresh] = Whispr.create(Math.random())
 
+    const bundle = Whispr.from({
+        input,
+        timer,
+        refresh
+    }, ({ input, timer, refresh }) => ({
+        data: input,
+        timer,
+        refresh
+    }));
+
+    // Initing dispatcher
+    const dispatcher: Dispatcher<{ data: I; timer: number; refresh: number; }, O> = useSafeRef(() =>
+        new Dispatcher(bundle, (i, p, s) => f(i.data, p, s), debouce)
+    );
+
+    // Returning dispatcher and refresh function
     return [
         dispatcher,
         () => {
