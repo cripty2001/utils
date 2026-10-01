@@ -251,11 +251,13 @@ export function useAsyncPeriodic<I, O>(
         }
     }, [data, timer, refresh]);
 
+    const dispatcher = useSafeRef(() => useAsync(
+        (i, p, s) => f(i.data, p, s),
+        bundle,
+    ));
+
     return [
-        useAsync(
-            (i, p, s) => f(i.data, p, s),
-            bundle,
-        ),
+        dispatcher,
         () => {
             setRefresh(Math.random());
         }
