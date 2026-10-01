@@ -245,7 +245,7 @@ export function useAsyncPeriodic<I, O>(
     const bundle = useMemo(() => {
         return {
             data,
-            interval
+            timer
         }
     }, [data, timer]);
 

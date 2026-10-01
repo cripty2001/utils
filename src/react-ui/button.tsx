@@ -7,9 +7,16 @@ export type ButtonProps = {
     children: React.ReactElement
     className?: string
     onError?: (error: unknown) => void
+    loader?: React.ReactElement
 }
 
-export default function Button({ onClick, children, className, onError }: ButtonProps) {
+export default function Button({ onClick, children, className, onError, loader }: ButtonProps) {
+    const Loader = loader ?? <Loader2 style={{
+        width: '1rem',
+        height: '1rem',
+        animation: 'spin 1s linear infinite',
+    }} />
+
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const handleClick = async () => {
@@ -45,11 +52,7 @@ export default function Button({ onClick, children, className, onError }: Button
                     }}
                 >
                     {loading ?
-                        <Loader2 style={{
-                            width: '1rem',
-                            height: '1rem',
-                            animation: 'spin 1s linear infinite',
-                        }} /> :
+                        Loader :
                         children
                     }
                 </div>
