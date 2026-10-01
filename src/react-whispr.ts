@@ -233,15 +233,13 @@ export function useAsync<I, O>(
  * @param f @see useAsync
  * @param data @see useAsync
  * @param interval The interval to re-execute the async function. If null, the async function will not be re-executed.
- * @param debounce @see useAsync
  * 
  * @returns @see useAsync
  */
 export function useAsyncPeriodic<I, O>(
     f: (input: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>,
     data: I,
-    interval: number,
-    debounce?: number
+    interval: number
 ): Dispatcher<any, O> {
     const timer = useClock(interval)
     const bundle = useMemo(() => {
@@ -249,12 +247,11 @@ export function useAsyncPeriodic<I, O>(
             data,
             interval
         }
-    }, [data, timer, debounce]);
+    }, [data, timer]);
 
     return useAsync(
         (i, p, s) => f(i.data, p, s),
         bundle,
-        debounce
     );
 }
 
