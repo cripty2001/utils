@@ -276,20 +276,23 @@ export function useAsync<I, O>(
     }, [data, setInput]);
 
     // Initing refresh bundle
-    const timer = interval !== null ?
+    const timer = useSafeRef(() => interval !== null ?
         getClock(interval) :
         Whispr.create(0)[0]
-    const [refresh, setRefresh] = Whispr.create(Math.random())
+    );
+    const [refresh, setRefresh] = useSafeRef(() => Whispr.create(Math.random()));
 
-    const bundle = Whispr.from({
-        input,
-        timer,
-        refresh
-    }, ({ input, timer, refresh }) => ({
-        data: input,
-        timer,
-        refresh
-    }));
+    const bundle = useSafeRef(
+        () => Whispr.from({
+            input,
+            timer,
+            refresh
+        }, ({ input, timer, refresh }) => ({
+            data: input,
+            timer,
+            refresh
+        }))
+    )
 
     // Initing dispatcher
     const dispatcher: Dispatcher<{ data: I; timer: number; refresh: number; }, O> = useSafeRef(() =>
