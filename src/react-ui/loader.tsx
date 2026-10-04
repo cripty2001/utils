@@ -29,9 +29,10 @@ export type LoaderProps<T> = {
 export default function Loader<T>(props: LoaderProps<T>) {
     const prev = useRef<DispatcherStatePayload<T>>({ loading: true, progress: 0 });
     const state = useWhisprValue(props.data.data);
-    useEffect(() => {
+
+    if (!state.loading) {
         prev.current = state;
-    }, [state]);
+    }
 
     const data = useMemo(() => {
         if (props.showRefreshing)
