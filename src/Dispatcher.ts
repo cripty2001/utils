@@ -2,7 +2,7 @@ import { Whispr, WhisprSetter } from "@cripty2001/whispr";
 import { isEqual } from "lodash";
 import { sleep } from ".";
 
-export type DispatcherStatePayload<T> =
+export type DispatcherStatePayloadResponse<O> =
     {
         loading: true,
         progress: number,
@@ -10,7 +10,7 @@ export type DispatcherStatePayload<T> =
         { loading: false } & (
             {
                 ok: true;
-                data: T
+                data: O
             } | {
                 ok: false;
                 error: Error
@@ -18,17 +18,22 @@ export type DispatcherStatePayload<T> =
         )
     )
 
-type DispatcherState<T> = {
+export type DispatcherStatePayload<I, O> = {
+    input: I;
+    response: DispatcherStatePayloadResponse<O>;
+}
+
+type DispatcherState<I, O> = {
     controller: AbortController;
-    payload: DispatcherStatePayload<T>;
+    payload: DispatcherStatePayload<I, O>;
 }
 
 type DispatcherFunction<I, O> = (data: I, setProgress: (p: number) => void, signal: AbortSignal) => Promise<O>
 export class Dispatcher<I, O> {
-    private state: Whispr<DispatcherState<O>>;
-    private setState: WhisprSetter<DispatcherState<O>>;
+    private state: Whispr<DispatcherState<I, O>>;
+    private setState: WhisprSetter<DispatcherState<I, O>>;
 
-    public data: Whispr<DispatcherStatePayload<O>>;
+    public data: Whispr<DispatcherStatePayload<I, O>>;
     public filtered: Whispr<O | null>;
 
     public readonly DEBOUNCE_INTERVAL;
@@ -53,11 +58,14 @@ export class Dispatcher<I, O> {
         this.DEBOUNCE_INTERVAL = DEBOUNCE_INTERVAL;
         this.value = value;
 
-        [this.state, this.setState] = Whispr.create<DispatcherState<O>>({
+        [this.state, this.setState] = Whispr.create<DispatcherState<I, O>>({
             controller: new AbortController(),
             payload: {
-                loading: true,
-                progress: 0,
+                input: value.value,
+                response: {
+                    loading: true,
+                    progress: 0,
+                },
             }
         });
 
@@ -78,12 +86,12 @@ export class Dispatcher<I, O> {
             {
                 data: this.data
             },
-            ({ data }) => {
-                if (data.loading)
+            ({ data: { response } }) => {
+                if (response.loading)
                     return null;
-                if (!data.ok)
+                if (!response.ok)
                     return null;
-                return data.data;
+                return response.data;
             }
         )
     }
@@ -99,19 +107,25 @@ export class Dispatcher<I, O> {
         this.setState({
             controller,
             payload: {
-                loading: true,
-                progress: 0,
+                input: this.value.value,
+                response: {
+                    loading: true,
+                    progress: 0,
+                },
             }
         });
 
         // Creating generic state update function
-        const updateState = (value: DispatcherStatePayload<O>) => {
+        const updateState = (value: DispatcherStatePayloadResponse<O>) => {
             if (controller.signal.aborted)  // Working on local controller, not global one. Old controller will change and be aborted on reset, global one will always be running
                 return;
 
             this.setState({
                 controller: this.state.value.controller, // Keeping the effective controller, not the internal old one (even if, in practice, they should be the same, if everything worked well),
-                payload: value,
+                payload: {
+                    input: this.value.value,
+                    response: value,
+                }
             });
         }
 

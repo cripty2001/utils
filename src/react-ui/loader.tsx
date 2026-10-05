@@ -19,44 +19,44 @@ if (typeof document !== 'undefined') {
     }
 }
 
-export type LoaderProps<T> = {
-    data: Dispatcher<unknown, T>
-    children: (props: { data: T }) => React.ReactNode;
+export type LoaderProps<I, O> = {
+    data: Dispatcher<I, O>
+    children: (props: { data: O }) => React.ReactNode;
     loader?: React.ReactNode
-    showRefreshing?: boolean
+    computeRefreshKey?: (input: I) => string
 }
 
-export default function Loader<T>(props: LoaderProps<T>) {
-    const prev = useRef<DispatcherStatePayload<T>>({ loading: true, progress: 0 });
-    const state = useWhisprValue(props.data.data);
+export default function Loader<I, O>(props: LoaderProps<I, O>) {
+    const ck = props.computeRefreshKey ?? ((input: I) => JSON.stringify(input));
 
-    if (!state.loading) {
-        prev.current = state;
+    const active = useRef<DispatcherStatePayload<I, O>>({
+        input: undefined as unknown as I,
+        response: { loading: true, progress: 0 }
+    });
+    const incoming = useWhisprValue(props.data.data);
+
+    if (
+        ck(active.current.input) !== ck(incoming.input) ||
+        !incoming.response.loading
+    ) {
+        active.current = incoming;
     }
-
-    const data = useMemo(() => {
-        if (props.showRefreshing)
-            return state;
-
-        if (state.loading && prev.current !== null)
-            return prev.current;
-
-        return state;
-    }, [state.loading, prev.current, props.showRefreshing]);
 
     return (
         <div>
-            <Content data={data} children={props.children} loader={props.loader} />
+            <Content data={active.current} children={props.children} loader={props.loader} />
         </div>
     )
 }
 
 function Content<T>({ data, children, loader }: {
-    data: DispatcherStatePayload<T>,
+    data: DispatcherStatePayload<unknown, T>,
     children: (props: { data: T }) => React.ReactNode,
     loader?: React.ReactNode
 }) {
-    if (data.loading)
+    const response = data.response;
+
+    if (response.loading)
         return loader ?? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
                 <div style={{
@@ -69,8 +69,8 @@ function Content<T>({ data, children, loader }: {
                 }}></div>
             </div>
         )
-    if (!data.ok)
-        return <div style={{ color: '#ef4444' }}>{data.error.message}</div>
+    if (!response.ok)
+        return <div style={{ color: '#ef4444' }}>{response.error.message}</div>
 
-    return children({ data: data.data });
+    return children({ data: response.data });
 }
