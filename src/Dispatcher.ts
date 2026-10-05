@@ -20,7 +20,7 @@ export type DispatcherStatePayloadResponse<O> =
 
 export type DispatcherStatePayload<I, O> = {
     input: I;
-    response: DispatcherStatePayloadResponse<O>;
+    output: DispatcherStatePayloadResponse<O>;
 }
 
 type DispatcherState<I, O> = {
@@ -62,7 +62,7 @@ export class Dispatcher<I, O> {
             controller: new AbortController(),
             payload: {
                 input: value.value,
-                response: {
+                output: {
                     loading: true,
                     progress: 0,
                 },
@@ -86,7 +86,7 @@ export class Dispatcher<I, O> {
             {
                 data: this.data
             },
-            ({ data: { response } }) => {
+            ({ data: { output: response } }) => {
                 if (response.loading)
                     return null;
                 if (!response.ok)
@@ -108,7 +108,7 @@ export class Dispatcher<I, O> {
             controller,
             payload: {
                 input: this.value.value,
-                response: {
+                output: {
                     loading: true,
                     progress: 0,
                 },
@@ -124,7 +124,7 @@ export class Dispatcher<I, O> {
                 controller: this.state.value.controller, // Keeping the effective controller, not the internal old one (even if, in practice, they should be the same, if everything worked well),
                 payload: {
                     input: this.value.value,
-                    response: value,
+                    output: value,
                 }
             });
         }

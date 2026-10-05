@@ -339,8 +339,8 @@ export function useAsyncEffect<I>(
 ): void {
     const [dispatcher] = useAsync(data, debounce, null, f);
     useOnWhispr(dispatcher.data, (data) => {
-        if (!data.loading && !data.ok) {
-            throw data.error;
+        if (!data.output.loading && !data.output.ok) {
+            throw data.output.error;
         }
     }, true);
 }

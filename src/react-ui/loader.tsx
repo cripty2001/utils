@@ -31,13 +31,13 @@ export default function Loader<I, O>(props: LoaderProps<I, O>) {
 
     const active = useRef<DispatcherStatePayload<I, O>>({
         input: undefined as unknown as I,
-        response: { loading: true, progress: 0 }
+        output: { loading: true, progress: 0 }
     });
     const incoming = useWhisprValue(props.data.data);
 
     if (
         ck(active.current.input) !== ck(incoming.input) ||
-        !incoming.response.loading
+        !incoming.output.loading
     ) {
         active.current = incoming;
     }
@@ -54,9 +54,9 @@ function Content<T>({ data, children, loader }: {
     children: (props: { data: T }) => React.ReactNode,
     loader?: React.ReactNode
 }) {
-    const response = data.response;
+    const result = data.output;
 
-    if (response.loading)
+    if (result.loading)
         return loader ?? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
                 <div style={{
@@ -69,8 +69,8 @@ function Content<T>({ data, children, loader }: {
                 }}></div>
             </div>
         )
-    if (!response.ok)
-        return <div style={{ color: '#ef4444' }}>{response.error.message}</div>
+    if (!result.ok)
+        return <div style={{ color: '#ef4444' }}>{result.error.message}</div>
 
-    return children({ data: response.data });
+    return children({ data: result.data });
 }
