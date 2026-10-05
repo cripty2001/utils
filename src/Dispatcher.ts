@@ -96,6 +96,13 @@ export class Dispatcher<I, O> {
         )
     }
 
+    /**
+     * Re-execute the dispatcher, ignoring both the debounce interval and the input deduplication
+     */
+    public refresh() {
+        this.dispatch(this.value.value);
+    }
+
     private reset() {
         // Aborting previous request
         this.state.value.controller.abort();
