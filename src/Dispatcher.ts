@@ -90,7 +90,6 @@ export class Dispatcher<I, O> {
     }
 
     /**
-     * @deprecated Use static constructor instead
      * Create a new dispatcher 
      * @param value The whispr value that will trigger f call when changed. Using this pattern instead of exposing a dispatch method allow to return the full dispatcher to anyone, without having to worry about them messing it
      * @param f The async function to call. It should return a promise that resolves to the data.
@@ -112,6 +111,7 @@ export class Dispatcher<I, O> {
     }
 
     /**
+     * @deprecated Use static constructor instead
      * Re-execute the dispatcher, ignoring both the debounce interval and the input deduplication
      */
     public refresh() {
