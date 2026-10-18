@@ -43,14 +43,7 @@ export class Dispatcher<I, O> {
     private lastValue: I | null = null; // Last value, to avoid useless dispatches
 
     /**
-     * Create a new dispatcher 
-     * @param value The whispr value that will trigger f call when changed. Using this pattern instead of exposing a dispatch method allow to return the full dispatcher to anyone, without having to worry about them messing it
-     * @param f The async function to call. It should return a promise that resolves to the data.
-     * @param DEBOUNCE_INTERVAL The debounce interval in milliseconds. Default to 200ms. The function will not be called if this time has not passed since the last call. If another change happens during the wait, the first function call will be aborted.
-     * 
-     * @remarks If the debounce interval is 0, the function will be called synchronously, as a Whispr listener would do.
-     * @remarks The value is deep checked for equality. The function will be called only if the value changed deeply
-     * @remarks Data updating flag is set in a synchronous way. This means that in the event your DEBOUNCE_INTERVAL is near infinity, you still get the data set to updating true immediately when you update the value. It just wait like this forever
+     * @deprecated Use static constructor instead
      */
     constructor(value: Whispr<I>, f: DispatcherFunction<I, O>, DEBOUNCE_INTERVAL: number = 200) {
         // Initing state
@@ -94,6 +87,28 @@ export class Dispatcher<I, O> {
                 return response.data;
             }
         )
+    }
+
+    /**
+     * @deprecated Use static constructor instead
+     * Create a new dispatcher 
+     * @param value The whispr value that will trigger f call when changed. Using this pattern instead of exposing a dispatch method allow to return the full dispatcher to anyone, without having to worry about them messing it
+     * @param f The async function to call. It should return a promise that resolves to the data.
+     * @param DEBOUNCE_INTERVAL The debounce interval in milliseconds. Default to 200ms. The function will not be called if this time has not passed since the last call. If another change happens during the wait, the first function call will be aborted.
+     * 
+     * @returns A tuple containing the dispatcher and a function to refresh it
+     * 
+     * @remarks If the debounce interval is 0, the function will be called synchronously, as a Whispr listener would do.
+     * @remarks The value is deep checked for equality. The function will be called only if the value changed deeply
+     * @remarks Data updating flag is set in a synchronous way. This means that in the event your DEBOUNCE_INTERVAL is near infinity, you still get the data set to updating true immediately when you update the value. It just wait like this forever
+     */
+    public static create<I, O>(value: Whispr<I>, f: DispatcherFunction<I, O>, DEBOUNCE_INTERVAL: number = 200): [Dispatcher<I, O>, () => Promise<void>] {
+        const d = new Dispatcher(value, f, DEBOUNCE_INTERVAL);
+        const refresh = async () => {
+            d.refresh();
+            await d.data.wait(d => d.output.loading === false);
+        }
+        return [d, refresh];
     }
 
     /**
