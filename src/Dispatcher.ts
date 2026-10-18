@@ -104,8 +104,7 @@ export class Dispatcher<I, O> {
     public static create<I, O>(value: Whispr<I>, f: DispatcherFunction<I, O>, DEBOUNCE_INTERVAL: number = 200): [Dispatcher<I, O>, () => Promise<void>] {
         const d = new Dispatcher(value, f, DEBOUNCE_INTERVAL);
         const refresh = async () => {
-            d.refresh();
-            await d.data.wait(d => d.output.loading === false);
+            await d.dispatch(d.value.value);
         }
         return [d, refresh];
     }
