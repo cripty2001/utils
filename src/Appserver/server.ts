@@ -46,7 +46,7 @@ export class Appserver {
     }
 
     private readonly rpcBase: string;
-    private constructor(rpcBase: string, jwks: RemoteJWKSet, issuer: string, audience: string, scopesKey: string = 'scope') {
+    private constructor(rpcBase: string, jwks: RemoteJWKSet, issuer: string, audience: string, scopesKey: string) {
         this.rpcBase = rpcBase;
         this.jwks = jwks;
         this.issuer = issuer;
@@ -54,9 +54,9 @@ export class Appserver {
         this.scopesKey = scopesKey;
     }
 
-    public static async create(audience: string, issuerUrl: string, rpcBase: string = '/exec') {
+    public static async create(audience: string, issuerUrl: string, rpcBase: string = '/exec', scopesKey: string = 'scope') {
         const { jwks, issuer } = await this.resolveAuth(issuerUrl);
-        const appserver = new Appserver(rpcBase, jwks, issuer, audience);
+        const appserver = new Appserver(rpcBase, jwks, issuer, audience, scopesKey);
 
         appserver.fastify.setErrorHandler(
             appserver.handleError
@@ -132,7 +132,7 @@ export class Appserver {
                     const { payload } = await jwtVerify<Payload>(token.slice(7), this.jwks, {
                         issuer: this.issuer,
                         audience: this.audience,
-                        requiredClaims: ['sub'],
+                        requiredClaims: ['sub', 'iat', 'exp'],
                     });
 
                     return payload;
@@ -162,7 +162,14 @@ export class Appserver {
                 }
             })();
 
-            const scopes = (payload[this.scopesKey] as string | undefined)?.split(' ') ?? [];
+            const scopes = (() => {
+                const data = payload[this.scopesKey];
+                if (typeof data === 'string')
+                    return data.split(' ');
+                if (Array.isArray(data))
+                    return data;
+                return [];
+            })();
             if (!scopes.includes(scope))
                 throw new AppserverAuthHandledError('MISSING_SCOPE', 'Access token scope is not valid.', false);
 
