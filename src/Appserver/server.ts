@@ -9,19 +9,132 @@ import cors from '@fastify/cors'
 
 export { Type }
 
+export type AppserverAutoloaderModule<TInput extends TSchema, TOutput extends TSchema> = {
+    inputSchema: TInput;
+    outputSchema: TOutput;
+    handler: (data: Static<TInput>, user: AppserverUser) => Promise<Static<TOutput>>;
+}
+
 declare module 'fastify' {
     interface FastifyRequest {
         user: { id: string } | null;
     }
 }
 
+type AppserverUserConfig = {
+    jwks: RemoteJWKSet;
+    issuer: string;
+    audience: string;
+    scopesKey: string;
+}
+type AppserverUserData = {
+    sub: string;
+    permissions: string[];
+}
+
+export class AppserverUser {
+    private readonly config: AppserverUserConfig;
+    private readonly header: string | undefined;
+    private _data: AppserverUserData | null = null;
+
+    public get data(): Promise<AppserverUserData> {
+        return (async () => {
+            this._data ??= await AppserverUser.parseJwt(
+                this.header,
+                this.config
+            );
+            return this._data;
+        })();
+    }
+
+    public constructor(config: AppserverUserConfig, header: string | undefined) {
+        this.config = config;
+        this.header = header;
+    }
+
+    public async enforce(permission: string) {
+        const permissions = await this.permissions;
+        if (!permissions.includes(permission))
+            throw new AppserverAuthHandledError('MISSING_SCOPE', 'Access token scope is not valid.', false);
+    }
+
+    public get sub(): Promise<string> {
+        return this.data.then(data => data.sub);
+    }
+
+    public get permissions(): Promise<string[]> {
+        return this.data.then(data => data.permissions);
+    }
+
+    /**
+     * 
+     * @param header The JWT authorization header, the one containing the JWT. Both the format `Bearer <JWT>` and `<JWT>` are supported.
+     * @returns 
+     */
+    private static async parseJwt(header: string | undefined, config: AppserverUserConfig): Promise<AppserverUserData> {
+        const token = header?.replace(/^Bearer /, '');
+        if (!token)
+            throw new AppserverAuthHandledError('HEADER_MISSING', 'Missing or invalid authorization header', true);
+
+        type Payload = JWTPayload;
+        const payload = await (async () => {
+            try {
+                const { payload } = await jwtVerify<Payload>(token.slice(7), config.jwks, {
+                    issuer: config.issuer,
+                    audience: config.audience,
+                    requiredClaims: ['sub', 'iat', 'exp'],
+                });
+
+                return payload;
+            } catch (err) {
+                if (err instanceof errors.JWTExpired)
+                    throw new AppserverAuthHandledError('TOKEN_EXPIRED', 'Access token has expired.', true);
+                if (
+                    err instanceof errors.JWTInvalid
+                    || err instanceof errors.JWTClaimValidationFailed
+                    || err instanceof errors.JWSSignatureVerificationFailed
+                    || err instanceof errors.JWSInvalid
+                    || err instanceof errors.JWKSNoMatchingKey
+                    || err instanceof errors.JOSEAlgNotAllowed
+                )
+                    throw new AppserverAuthHandledError('TOKEN_INVALID', 'Access token is invalid', true);
+                if (err instanceof errors.JWKSTimeout || err instanceof errors.JWKSInvalid)
+                    throw new Error(
+                        'Failed to verify the access token against the identity provider JWKS.',
+                        { cause: err },
+                    );
+                if (err instanceof Error)
+                    throw err;
+
+                throw new Error('Unexpected failure while verifying the access token.', {
+                    cause: err
+                });
+            }
+        })();
+
+        if (!payload.sub)
+            throw new Error('JOSE assert failed, sub is missing despite being required');
+
+        const scopes = (() => {
+            const data = payload[config.scopesKey];
+            if (typeof data === 'string')
+                return data.split(' ');
+            if (Array.isArray(data))
+                return data;
+            return [];
+        })();
+
+        return {
+            sub: payload.sub,
+            permissions: scopes
+        };
+    }
+}
+
 export class Appserver {
     public readonly fastify = Fastify({ logger: true })
         .withTypeProvider<TypeBoxTypeProvider>();
-    private readonly jwks: RemoteJWKSet;
-    private readonly issuer: string;
-    private readonly audience: string;
-    private readonly scopesKey: string;
+    public readonly authConfig: AppserverUserConfig;
 
     private static async resolveAuth(baseUrl: string): Promise<{ jwks: RemoteJWKSet, issuer: string }> {
         const res = await fetch(`${baseUrl}/.well-known/openid-configuration`);
@@ -49,17 +162,20 @@ export class Appserver {
     }
 
     private readonly rpcBase: string;
-    private constructor(rpcBase: string, jwks: RemoteJWKSet, issuer: string, audience: string, scopesKey: string) {
+    private constructor(rpcBase: string, authConfig: AppserverUserConfig) {
         this.rpcBase = rpcBase;
-        this.jwks = jwks;
-        this.issuer = issuer;
-        this.audience = audience;
-        this.scopesKey = scopesKey;
+        this.authConfig = authConfig;
     }
 
     public static async create(audience: string, issuerUrl: string, origins: string[], rpcBase: string = '/exec', scopesKey: string = 'scope') {
         const { jwks, issuer } = await this.resolveAuth(issuerUrl);
-        const appserver = new Appserver(rpcBase, jwks, issuer, audience, scopesKey);
+        const authConfig: AppserverUserConfig = {
+            jwks,
+            issuer,
+            audience,
+            scopesKey
+        };
+        const appserver = new Appserver(rpcBase, authConfig);
 
         appserver.fastify.setErrorHandler(
             appserver.handleError
@@ -100,8 +216,7 @@ export class Appserver {
             input: TInput;
             output: TOutput;
         },
-        scope: string,
-        handler: (data: Static<TInput>, user: { id: string }) => Promise<Static<TOutput>>,
+        handler: (data: Static<TInput>, user: AppserverUser) => Promise<Static<TOutput>>,
     ): void {
         const routeSchema: {
             body: TSchema;
@@ -116,78 +231,16 @@ export class Appserver {
         this.fastify.post(
             `${this.rpcBase}/${route.replace(/^\/+/, '')}`,
             {
-                preHandler: [
-                    this.enforceAccess(scope)
-                ],
                 schema: routeSchema,
             },
             async (request) => {
-                const user = request.user as { id: string };
+                const user = new AppserverUser(
+                    this.authConfig,
+                    request.headers.authorization
+                );
                 return handler(request.body as Static<TInput>, user);
             },
         );
-    }
-
-    private enforceAccess(scope: string) {
-        return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
-            const token = request.headers.authorization;
-            if (!token || !token.startsWith('Bearer '))
-                throw new AppserverAuthHandledError('HEADER_MISSING', 'Missing or invalid authorization header', true);
-
-            type Payload = JWTPayload;
-            const payload = await (async () => {
-                try {
-                    const { payload } = await jwtVerify<Payload>(token.slice(7), this.jwks, {
-                        issuer: this.issuer,
-                        audience: this.audience,
-                        requiredClaims: ['sub', 'iat', 'exp'],
-                    });
-
-                    return payload;
-                } catch (err) {
-                    if (err instanceof errors.JWTExpired)
-                        throw new AppserverAuthHandledError('TOKEN_EXPIRED', 'Access token has expired.', true);
-                    if (
-                        err instanceof errors.JWTInvalid
-                        || err instanceof errors.JWTClaimValidationFailed
-                        || err instanceof errors.JWSSignatureVerificationFailed
-                        || err instanceof errors.JWSInvalid
-                        || err instanceof errors.JWKSNoMatchingKey
-                        || err instanceof errors.JOSEAlgNotAllowed
-                    )
-                        throw new AppserverAuthHandledError('TOKEN_INVALID', 'Access token is invalid', true);
-                    if (err instanceof errors.JWKSTimeout || err instanceof errors.JWKSInvalid)
-                        throw new Error(
-                            'Failed to verify the access token against the identity provider JWKS.',
-                            { cause: err },
-                        );
-                    if (err instanceof Error)
-                        throw err;
-
-                    throw new Error('Unexpected failure while verifying the access token.', {
-                        cause: err
-                    });
-                }
-            })();
-
-            const scopes = (() => {
-                const data = payload[this.scopesKey];
-                if (typeof data === 'string')
-                    return data.split(' ');
-                if (Array.isArray(data))
-                    return data;
-                return [];
-            })();
-            if (!scopes.includes(scope))
-                throw new AppserverAuthHandledError('MISSING_SCOPE', 'Access token scope is not valid.', false);
-
-            if (!payload.sub)
-                throw new Error('JOSE assert failed, sub is missing despite being required');
-
-            request.user = {
-                id: payload.sub
-            };
-        };
     }
 
     private handleError(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
@@ -255,11 +308,17 @@ export class Appserver {
             if (!ACTION_REGEX.test(action))
                 throw new Error(`Invalid module path "${action}" — all segments must be lowercase alphanumeric`);
 
-            const mod = await import(fullPath) as { default: (app: Appserver, path: string) => void };
-            if (!mod.default)
-                throw new Error(`Module "${fullPath}" must have a default export containing a registering function (register(app: Appserver) => void)`);
+            const mod = await import(fullPath) as {
+                default: AppserverAutoloaderModule<TSchema, TSchema>
+            };
+            const { inputSchema, outputSchema, handler } = mod.default;
+            if (!inputSchema || !outputSchema || !handler)
+                throw new Error(`Module "${fullPath}" must default export in the format AppserverAutoloaderModule`);
 
-            mod.default(this, action);
+            this.registerRpc(action, {
+                input: inputSchema,
+                output: outputSchema,
+            }, handler);
         }
     }
 }
