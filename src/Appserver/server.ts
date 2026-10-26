@@ -87,8 +87,7 @@ export class AppserverUser {
 
                 return payload;
             } catch (err) {
-                console.log(process.env);
-                if (process.env.DEBUG === 'true') {
+                if (process.env.DEBUG?.toLowerCase() === 'true') {
                     console.warn(err);
                 }
 
