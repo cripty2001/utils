@@ -1,6 +1,6 @@
 import type React from "react";
-import type { Dispatcher, DispatcherStatePayload } from "../Dispatcher";
-import { useWhisprValue } from "../react-whispr";
+import type { Dispatcher, DispatcherStatePayload } from "../Dispatcher.js";
+import { useWhisprValue } from "../react-whispr.js";
 import { useEffect, useMemo, useRef } from "react";
 
 const spinKeyframes = `

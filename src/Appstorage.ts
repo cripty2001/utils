@@ -1,7 +1,7 @@
 import { Whispr, WhisprSetter } from '@cripty2001/whispr';
 
-import { Dispatcher } from './Dispatcher';
-import { JSONEncodable } from './index';
+import { Dispatcher } from './Dispatcher.js';
+import { JSONEncodable } from './index.js';
 
 export type AppstorageData = Record<string, JSONEncodable>;
 

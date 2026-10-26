@@ -1,8 +1,8 @@
 import { LucideIcon } from "lucide-react"
 import { useMemo } from "react"
-import { TypeofRecord } from ".."
-import InputComponent, { InputComponentPropsVariants } from "./input"
-import TextButton from "./textButton"
+import { TypeofRecord } from "../index.js"
+import InputComponent, { InputComponentPropsVariants } from "./input.js"
+import TextButton from "./textButton.js"
 
 export type FormComponentPropsInput = {
     label?: string,

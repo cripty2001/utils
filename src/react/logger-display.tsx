@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle2, Info, TriangleAlert, X } from "lucide-react";
-import logger, { type LoggerItem } from "../Logger/Logger";
-import { useWhisprValue } from "../react-whispr";
+import logger, { type LoggerItem } from "../Logger/Logger.js";
+import { useWhisprValue } from "../react-whispr.js";
 
 const SEVERITY_STYLES = {
     error: {

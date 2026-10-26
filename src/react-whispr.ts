@@ -2,9 +2,9 @@ import { Whispr } from "@cripty2001/whispr";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { isEqual } from "lodash";
-import { CURRENT_TS_MS, getClock, getRandomId, JSONEncodable } from ".";
-import { Dispatcher } from "./Dispatcher";
-import { Searcher, SearcherData } from "./Searcher";
+import { CURRENT_TS_MS, getClock, getRandomId, JSONEncodable } from "./index.js";
+import { Dispatcher } from "./Dispatcher.js";
+import { Searcher, SearcherData } from "./Searcher/index.js";
 
 /**
  * Convert a Whispr value into a reactive react value, usable in function components with the standard react reactive system.

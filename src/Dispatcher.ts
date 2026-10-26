@@ -1,6 +1,6 @@
 import { Whispr, WhisprSetter } from "@cripty2001/whispr";
 import { isEqual } from "lodash";
-import { sleep } from ".";
+import { sleep } from "./index.js";
 
 export type DispatcherStatePayloadResponse<O> =
     {

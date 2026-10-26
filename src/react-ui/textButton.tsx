@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react"
-import Button, { ButtonProps } from "./button"
+import Button, { ButtonProps } from "./button.js"
 
 export type TextButtonProps = Omit<ButtonProps, 'children'> & {
     title: string,

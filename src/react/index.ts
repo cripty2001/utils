@@ -1,2 +1,2 @@
-export { LoggerReactDisplay, type LoggerReactDisplayProps } from './logger-display';
+export { LoggerReactDisplay, type LoggerReactDisplayProps } from './logger-display.js';
 

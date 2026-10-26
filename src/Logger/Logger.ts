@@ -1,5 +1,5 @@
 import { Whispr } from "@cripty2001/whispr";
-import { getRandomId } from "..";
+import { getRandomId } from "../index.js";
 
 export type LoggerItem = {
     id: string,

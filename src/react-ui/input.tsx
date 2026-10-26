@@ -1,6 +1,6 @@
 import { CopyIcon, LucideIcon } from "lucide-react";
 import { useState } from "react";
-import { copyToClipboard } from "../index";
+import { copyToClipboard } from "../index.js";
 
 export type InputComponentPropsVariantsItem = {
     input: string,
