@@ -1,5 +1,6 @@
 import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
+import PQueue from "p-queue";
 
 type LoginSheetPropsConfig = {
   issuer: string;
@@ -119,6 +120,8 @@ type ApiContextValue = {
   profile: Record<string, unknown> | undefined
 };
 
+const queue = new PQueue({ concurrency: 10 });
+
 const ApiContext = createContext<ApiContextValue | null>(null);
 
 export class ApiError extends Error { }
@@ -181,6 +184,7 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
+  auth.events.
   const exec = useCallback(async <I extends AppserverData, O extends AppserverData>(
     action: string,
     data: I,
