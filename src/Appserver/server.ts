@@ -87,6 +87,11 @@ export class AppserverUser {
 
                 return payload;
             } catch (err) {
+                console.log(process.env);
+                if (process.env.DEBUG === 'true') {
+                    console.warn(err);
+                }
+
                 if (err instanceof errors.JWTExpired)
                     throw new AppserverAuthHandledError('TOKEN_EXPIRED', 'Access token has expired.', true);
                 if (
