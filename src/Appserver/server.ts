@@ -18,6 +18,7 @@ export class Appserver {
     private readonly jwks: RemoteJWKSet;
     private readonly issuer: string;
     private readonly audience: string;
+    private readonly scopesKey: string;
 
     private static async resolveAuth(baseUrl: string): Promise<{ jwks: RemoteJWKSet, issuer: string }> {
         const res = await fetch(`${baseUrl}/.well-known/openid-configuration`);
@@ -45,11 +46,12 @@ export class Appserver {
     }
 
     private readonly rpcBase: string;
-    private constructor(rpcBase: string, jwks: RemoteJWKSet, issuer: string, audience: string) {
+    private constructor(rpcBase: string, jwks: RemoteJWKSet, issuer: string, audience: string, scopesKey: string = 'scope') {
         this.rpcBase = rpcBase;
         this.jwks = jwks;
         this.issuer = issuer;
         this.audience = audience;
+        this.scopesKey = scopesKey;
     }
 
     public static async create(audience: string, issuerUrl: string, rpcBase: string = '/exec') {
@@ -124,7 +126,7 @@ export class Appserver {
             if (!token || !token.startsWith('Bearer '))
                 throw new AppserverAuthHandledError('HEADER_MISSING', 'Missing or invalid authorization header', true);
 
-            type Payload = JWTPayload & { scope?: string };
+            type Payload = JWTPayload;
             const payload = await (async () => {
                 try {
                     const { payload } = await jwtVerify<Payload>(token.slice(7), this.jwks, {
@@ -160,7 +162,7 @@ export class Appserver {
                 }
             })();
 
-            const scopes = payload.scope?.split(' ') ?? [];
+            const scopes = (payload[this.scopesKey] as string | undefined)?.split(' ') ?? [];
             if (!scopes.includes(scope))
                 throw new AppserverAuthHandledError('MISSING_SCOPE', 'Access token scope is not valid.', false);
 
