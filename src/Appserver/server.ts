@@ -4,6 +4,9 @@ import path from 'path';
 import { readdir } from 'fs/promises';
 import { createRemoteJWKSet, errors, type JWTPayload, jwtVerify, type RemoteJWKSet } from 'jose';
 
+import cors from '@fastify/cors'
+
+
 export { Type }
 
 declare module 'fastify' {
@@ -54,7 +57,7 @@ export class Appserver {
         this.scopesKey = scopesKey;
     }
 
-    public static async create(audience: string, issuerUrl: string, rpcBase: string = '/exec', scopesKey: string = 'scope') {
+    public static async create(audience: string, issuerUrl: string, origins: string[], rpcBase: string = '/exec', scopesKey: string = 'scope') {
         const { jwks, issuer } = await this.resolveAuth(issuerUrl);
         const appserver = new Appserver(rpcBase, jwks, issuer, audience, scopesKey);
 
@@ -70,6 +73,11 @@ export class Appserver {
                 done(null, body);
             },
         );
+
+        await appserver.fastify.register(cors, {
+            origin: origins,
+            methods: ['POST', 'OPTIONS'],
+        })
 
         appserver.fastify.decorateRequest('user', null);
 
