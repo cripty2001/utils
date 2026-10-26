@@ -1,6 +1,7 @@
-import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, } from "react";
+import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, useRef, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
 import PQueue from "p-queue";
+import { useSafeRef } from "../../react-whispr.js";
 
 type LoginSheetPropsConfig = {
   issuer: string;
@@ -184,20 +185,34 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
-  auth.events.
+  const token = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    auth.events
+      .addUserLoaded((user) => {
+        token.current = user?.access_token ?? undefined;
+      })
+    auth.events
+      .addUserUnloaded(() => {
+        token.current = undefined;
+      });
+  }, [auth.events]);
+
   const exec = useCallback(async <I extends AppserverData, O extends AppserverData>(
     action: string,
     data: I,
     onError?: ExecOnError,
   ): Promise<O> => {
-    const res = await fetch(`${apiUrl}/exec/${action.startsWith('/') ? action.slice(1) : action}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${auth.user?.access_token}`,
-      },
-      body: JSON.stringify(data)
-    });
+    const res = await queue.add(async () =>
+      fetch(`${apiUrl}/exec/${action.startsWith('/') ? action.slice(1) : action}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${auth.user?.access_token}`,
+        },
+        body: JSON.stringify(data)
+      })
+    )
 
     if (res.status === 401) {
       auth.removeUser();
