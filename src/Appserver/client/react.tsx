@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type ReactNode, createContext, useContext, } from "react";
+import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
 
 type LoginSheetPropsConfig = {
@@ -115,6 +115,8 @@ export type Exec = <I extends AppserverData, O extends AppserverData>(
 
 type ApiContextValue = {
   exec: Exec;
+  logout: (remote: boolean) => Promise<void>;
+  profile: Record<string, unknown> | undefined
 };
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -162,6 +164,22 @@ type _ApiProviderProps = {
 };
 function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
   const auth = useAuth();
+
+  const profile = useMemo(() => {
+    if (!auth.user)
+      return undefined;
+
+    return auth.user.profile;
+  }, [auth]);
+
+  const logout = useCallback(async (remote: boolean = false) => {
+    if (remote) {
+      await auth.signoutRedirect();
+    }
+    else {
+      auth.removeUser();
+    }
+  }, [auth]);
 
   const exec = useCallback(async <I extends AppserverData, O extends AppserverData>(
     action: string,
@@ -217,7 +235,7 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     throw new UnknownApiError();
   }, [auth]);
 
-  return <ApiContext.Provider value={{ exec }}> {children} </ApiContext.Provider>;
+  return <ApiContext.Provider value={{ exec, logout, profile }}> {children} </ApiContext.Provider>;
 }
 
 export function useApi(): ApiContextValue {
