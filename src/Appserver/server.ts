@@ -79,7 +79,7 @@ export class AppserverUser {
         type Payload = JWTPayload;
         const payload = await (async () => {
             try {
-                const { payload } = await jwtVerify<Payload>(token.slice(7), config.jwks, {
+                const { payload } = await jwtVerify<Payload>(token, config.jwks, {
                     issuer: config.issuer,
                     audience: config.audience,
                     requiredClaims: ['sub', 'iat', 'exp'],
