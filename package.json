@@ -31,7 +31,8 @@
   "dependencies": {
     "@cripty2001/whispr": "^0.4.1",
     "@sinclair/typebox": "^0.34.41",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "react-oidc-context": "^3.3.1"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.21",
@@ -93,6 +94,11 @@
       "import": "./dist/Appserver/server.js",
       "types": "./dist/Appserver/server.d.ts",
       "require": "./dist/Appserver/server.js"
+    },
+    "./appserver/client/react": {
+      "import": "./dist/Appserver/client/react.js",
+      "types": "./dist/Appserver/client/react.d.ts",
+      "require": "./dist/Appserver/client/react.js"
     },
     "./react": {
       "import": "./dist/react/index.js",

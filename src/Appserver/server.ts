@@ -161,7 +161,7 @@ export class Appserver {
             })();
 
             const scopes = payload.scope?.split(' ') ?? [];
-            if (!scopes.includes(`res:${scope}`))
+            if (!scopes.includes(scope))
                 throw new AppserverAuthHandledError('MISSING_SCOPE', 'Access token scope is not valid.', false);
 
             if (!payload.sub)
