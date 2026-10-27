@@ -1,6 +1,6 @@
 import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, useRef, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
-import PQueue from "p-queue";
+import AppserverClient from "../client.js";
 import { useSafeRef } from "../../react-whispr.js";
 
 type LoginSheetPropsConfig = {
@@ -59,7 +59,6 @@ function _LoginSheet({ children, config, templates }: LoginSheetProps) {
   const auth = useAuth();
 
   const login = useCallback(async () => {
-    sessionStorage.setItem("auth_redirect_url", window.location.href);
     const state: LoginState = {
       returnTo: window.location.href
     };
@@ -95,70 +94,14 @@ function _LoginSheet({ children, config, templates }: LoginSheetProps) {
     callback={login}
   />;
 }
-//---
-
-export type AppserverData =
-  number |
-  string |
-  boolean |
-  AppserverData[] |
-  null |
-  { [key: string]: AppserverData | undefined };
-
-export type ExecOnError = Record<string, (payload: AppserverData) => Promise<void>>;
-
-export type Exec = <I extends AppserverData, O extends AppserverData>(
-  action: string,
-  data: I,
-  onError?: ExecOnError,
-) => Promise<O>;
 
 type ApiContextValue = {
-  exec: Exec;
+  exec: AppserverClient['exec'];
   logout: (remote: boolean) => Promise<void>;
   profile: Record<string, unknown> | undefined
 };
 
-const queue = new PQueue({ concurrency: 10 });
-
 const ApiContext = createContext<ApiContextValue | null>(null);
-
-export class ApiError extends Error { }
-export class AuthApiError extends ApiError {
-  public readonly recoverable: boolean;
-  constructor(recoverable: boolean) {
-    super(recoverable ?
-      "Authentication required" :
-      "Permission denied"
-    );
-    this.recoverable = recoverable;
-  }
-}
-export class ValidationApiError extends ApiError {
-  data: AppserverData;
-  constructor(data: AppserverData) {
-    super();
-    this.data = data;
-  }
-}
-
-export class ClientApiError extends ApiError {
-  public readonly code: string;
-  public readonly message: string;
-  public readonly details?: AppserverData;
-  constructor(code: string, message: string, details?: AppserverData) {
-    super();
-    this.code = code;
-    this.message = message;
-    this.details = details;
-  }
-}
-export class UnknownApiError extends ApiError {
-  constructor() {
-    super();
-    this.message = "An unknown error occurred";
-  }
-}
 
 type _ApiProviderProps = {
   children: ReactNode;
@@ -166,6 +109,7 @@ type _ApiProviderProps = {
 };
 function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
   const auth = useAuth();
+  const client = useSafeRef(() => new AppserverClient(apiUrl));
 
   const profile = useMemo(() => {
     if (!auth.user)
@@ -175,6 +119,8 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
   }, [auth]);
 
   const logout = useCallback(async (remote: boolean = false) => {
+    client.setToken(null);
+
     if (remote) {
       await auth.signoutRedirect();
     }
@@ -183,76 +129,24 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
-  const token = useRef<string | undefined>(undefined);
-
   useEffect(() => {
     auth.events
       .addUserLoaded((user) => {
-        token.current = user?.access_token ?? undefined;
+        client.setToken(user?.access_token ?? null);
       })
     auth.events
       .addUserUnloaded(() => {
-        token.current = undefined;
+        client.setToken(null);
       });
   }, [auth.events]);
 
-  const exec = useCallback(async <I extends AppserverData, O extends AppserverData>(
-    action: string,
-    data: I,
-    onError?: ExecOnError,
-  ): Promise<O> => {
-    const res = await queue.add(async () =>
-      fetch(`${apiUrl}/exec/${action.startsWith('/') ? action.slice(1) : action}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${auth.user?.access_token}`,
-        },
-        body: JSON.stringify(data)
-      })
-    )
+  const contextValue = useMemo(() => ({
+    exec: client.exec,
+    logout,
+    profile
+  }), [client, logout, profile]);
 
-    if (res.status === 401) {
-      auth.removeUser();
-      throw new AuthApiError(true);
-    }
-
-    if (res.status === 403) {
-      throw new AuthApiError(false);
-    }
-
-    if (res.status === 422) {
-      const body = await res.json();
-      throw new ValidationApiError(body);
-    }
-
-    if (res.status === 400) {
-      const body = await res.json() as {
-        code: string;
-        message: string;
-        details?: AppserverData;
-      }
-
-      const handler = onError?.[body.code];
-      if (handler)
-        await handler(body.details ?? {});
-
-      throw new ClientApiError(
-        body.code,
-        body.message,
-        body.details
-      );
-    }
-
-    if (res.status === 200) {
-      const body = await res.json() as O;
-      return body;
-    }
-
-    throw new UnknownApiError();
-  }, [auth]);
-
-  return <ApiContext.Provider value={{ exec, logout, profile }}> {children} </ApiContext.Provider>;
+  return <ApiContext.Provider value={contextValue}> {children} </ApiContext.Provider>;
 }
 
 export function useApi(): ApiContextValue {

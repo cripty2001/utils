@@ -6,7 +6,6 @@ import { createRemoteJWKSet, errors, type JWTPayload, jwtVerify, type RemoteJWKS
 
 import cors from '@fastify/cors'
 
-
 export { Type }
 
 export type AppserverAutoloaderModule<TInput extends TSchema, TOutput extends TSchema> = {
@@ -197,6 +196,7 @@ export class Appserver {
         await appserver.fastify.register(cors, {
             origin: origins,
             methods: ['POST', 'OPTIONS'],
+            maxAge: 600,
         })
 
         appserver.fastify.decorateRequest('user', null);
