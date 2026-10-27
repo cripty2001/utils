@@ -1,7 +1,7 @@
 import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, useRef, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
 import AppserverClient from "../client.js";
-import { useSafeRef } from "../../react-whispr.js";
+import { useSafeRef, useWhisprValue } from "../../react-whispr.js";
 
 type LoginSheetPropsConfig = {
   issuer: string;
@@ -129,6 +129,13 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
+  const loggedIn = useWhisprValue(client.loggedIn);
+  useEffect(() => {
+    if (!loggedIn) {
+      logout(false);
+    }
+  }, [loggedIn, logout]);
+
   useEffect(() => {
     auth.events
       .addUserLoaded((user) => {
@@ -141,7 +148,7 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
   }, [auth.events]);
 
   const contextValue = useMemo(() => ({
-    exec: client.exec,
+    exec: client.exec.bind(client),
     logout,
     profile
   }), [client, logout, profile]);
