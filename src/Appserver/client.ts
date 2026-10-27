@@ -73,16 +73,21 @@ export default class AppserverClient {
     action: string,
     data: I,
     onError?: ExecOnError,
+    priority?: number,
   ): Promise<O> {
-    const res = await queue.add(async () =>
-      fetch(`${this.apiUrl}/exec/${action.startsWith('/') ? action.slice(1) : action}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.token.value}`,
-        },
-        body: JSON.stringify(data)
-      })
+    const res = await queue.add(
+      async () =>
+        fetch(`${this.apiUrl}/exec/${action.startsWith('/') ? action.slice(1) : action}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${this.token.value}`,
+          },
+          body: JSON.stringify(data)
+        }),
+      {
+        priority: priority ?? 0,
+      }
     )
 
     if (res.status === 401) {
