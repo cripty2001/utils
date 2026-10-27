@@ -1,7 +1,7 @@
 import { useCallback, useEffect, type ReactNode, createContext, useContext, useMemo, useRef, } from "react";
 import { AuthProvider, useAuth, type AuthProviderProps } from "react-oidc-context";
-import AppserverClient from "../client.js";
-import { useSafeRef, useWhisprValue } from "../../react-whispr.js";
+import AppserverClient, { AuthApiError, AppserverData, ExecOnError } from "../client.js";
+import { useSafeRef } from "../../react-whispr.js";
 
 type LoginSheetPropsConfig = {
   issuer: string;
@@ -129,13 +129,6 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
-  const loggedIn = useWhisprValue(client.loggedIn);
-  useEffect(() => {
-    if (!loggedIn) {
-      logout(false);
-    }
-  }, [loggedIn, logout]);
-
   useEffect(() => {
     auth.events
       .addUserLoaded((user) => {
@@ -147,8 +140,25 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
       });
   }, [auth.events]);
 
+  const exec = useCallback(
+    async <
+      O extends AppserverData,
+      I extends AppserverData = AppserverData
+    >(action: string, data: I, onError?: ExecOnError): Promise<O> => {
+      try {
+        return await client.exec(action, data, onError);
+      } catch (e) {
+        if (e instanceof AuthApiError && e.recoverable) {
+          logout(false);
+        }
+        throw e;
+      }
+    },
+    [client, logout]
+  );
+
   const contextValue = useMemo(() => ({
-    exec: client.exec.bind(client),
+    exec,
     logout,
     profile
   }), [client, logout, profile]);
