@@ -276,8 +276,9 @@ export function useAsync<I, O>(
     }, [data, setInput]);
 
     // Initing dispatcher
-    const dispatcher: Dispatcher<I, O> = useSafeRef(() =>
-        new Dispatcher(input, (i, p, s) => f(i, p, s), debouce)
+    const [dispatcher, refresh] = useSafeRef(() =>
+        Dispatcher.create(input, (i, p, s) => f(i, p, s), debouce)
+        // new Dispatcher(input, (i, p, s) => f(i, p, s), debouce)
     );
 
     // Starting refresher
@@ -286,15 +287,13 @@ export function useAsync<I, O>(
         Number.MAX_SAFE_INTEGER
     );
     useEffect(() => {
-        dispatcher.refresh();
-    }, [clock, dispatcher]);
+        refresh();
+    }, [clock, refresh]);
 
     // Returning dispatcher and refresh function
     return [
         dispatcher,
-        () => {
-            dispatcher.refresh();
-        }
+        refresh
     ];
 }
 
