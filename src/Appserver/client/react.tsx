@@ -103,9 +103,7 @@ export type AppserverData =
   boolean |
   AppserverData[] |
   null |
-  {
-    [key: string]: AppserverData | undefined;
-  };
+  { [key: string]: AppserverData | undefined };
 
 export type ExecOnError = Record<string, (payload: AppserverData) => Promise<void>>;
 
