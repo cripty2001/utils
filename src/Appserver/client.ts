@@ -17,7 +17,7 @@ export type Exec = <I extends AppserverData, O extends AppserverData>(
   onError?: ExecOnError,
 ) => Promise<O>;
 
-const queue = new PQueue({ concurrency: 10 });
+const queue = new PQueue({ concurrency: 50 });
 
 export class ApiError extends Error { }
 export class AuthApiError extends ApiError {
