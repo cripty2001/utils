@@ -98,6 +98,11 @@
       "types": "./dist/Appserver/server.d.ts",
       "require": "./dist/Appserver/server.js"
     },
+    "./appserver/client": {
+      "import": "./dist/Appserver/client.js",
+      "types": "./dist/Appserver/client.d.ts",
+      "require": "./dist/Appserver/client.js"
+    },
     "./appserver/client/react": {
       "import": "./dist/Appserver/client/react.js",
       "types": "./dist/Appserver/client/react.d.ts",
