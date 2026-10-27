@@ -129,16 +129,16 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
     }
   }, [auth]);
 
-  useEffect(() => {
-    auth.events
-      .addUserLoaded((user) => {
-        client.setToken(user?.access_token ?? null);
-      })
-    auth.events
-      .addUserUnloaded(() => {
-        client.setToken(null);
-      });
-  }, [auth.events]);
+  // useEffect(() => {
+  //   auth.events
+  //     .addUserLoaded((user) => {
+  //       client.setToken(user?.access_token ?? null);
+  //     })
+  //   auth.events
+  //     .addUserUnloaded(() => {
+  //       client.setToken(null);
+  //     });
+  // }, [auth.events]);
 
   const exec = useCallback(
     async <
@@ -146,6 +146,8 @@ function _ApiProvider({ children, apiUrl }: _ApiProviderProps) {
       I extends AppserverData = AppserverData
     >(action: string, data: I, onError?: ExecOnError): Promise<O> => {
       try {
+        client.setToken(auth.user?.access_token ?? null);
+
         return await client.exec(action, data, onError);
       } catch (e) {
         if (e instanceof AuthApiError && e.recoverable) {
