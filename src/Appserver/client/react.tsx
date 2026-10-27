@@ -104,7 +104,7 @@ export type AppserverData =
   AppserverData[] |
   null |
   {
-    [key: string]: AppserverData;
+    [key: string]: AppserverData | undefined;
   };
 
 export type ExecOnError = Record<string, (payload: AppserverData) => Promise<void>>;
